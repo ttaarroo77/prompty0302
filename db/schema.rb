@@ -10,18 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_21_114223) do
-  create_table "conversations", force: :cascade do |t|
-    t.integer "prompt_id", null: false
-    t.text "content"
-    t.string "status", default: "completed"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["prompt_id"], name: "index_conversations_on_prompt_id"
-  end
-
+ActiveRecord::Schema[8.0].define(version: 2025_03_22_054028) do
   create_table "prompts", force: :cascade do |t|
-    t.string "title", null: false
+    t.string "title"
     t.string "url"
     t.text "description"
     t.datetime "created_at", null: false
@@ -30,13 +21,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_21_114223) do
 
   create_table "tags", force: :cascade do |t|
     t.integer "prompt_id", null: false
-    t.string "name", null: false
+    t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["prompt_id", "name"], name: "index_tags_on_prompt_id_and_name", unique: true
     t.index ["prompt_id"], name: "index_tags_on_prompt_id"
   end
 
-  add_foreign_key "conversations", "prompts"
   add_foreign_key "tags", "prompts"
 end

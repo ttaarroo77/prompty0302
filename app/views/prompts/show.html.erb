@@ -1,115 +1,63 @@
 <div class="row">
   <div class="col-md-8">
     <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">プロンプト詳細</h5>
+        <div>
+          <%= link_to "編集", edit_prompt_path(@prompt), class: "btn btn-sm btn-outline-primary me-2" %>
+          <%= button_to "削除", prompt_path(@prompt), method: :delete, class: "btn btn-sm btn-outline-danger", form: { data: { turbo_confirm: "本当に削除しますか？" } }, style: "display: inline-block;" %>
+        </div>
       </div>
-      
       <div class="card-body">
-        <%= form_with model: @prompt, local: true, method: :patch, id: "prompt-form", html: { data: { turbo: false } } do |f| %>
+        <h2><%= @prompt.title %></h2>
+        
+        <% if @prompt.url.present? %>
           <div class="mb-3">
-            <%= f.label :title, "タイトル", class: "form-label" %>
-            <%= f.text_field :title, class: "form-control" %>
+            <strong>URL:</strong>
+            <%= link_to @prompt.url, @prompt.url, target: "_blank" %>
           </div>
-          
-          <div class="mb-3">
-            <%= f.label :url, "URL", class: "form-label" %>
-            <%= f.text_field :url, class: "form-control" %>
-          </div>
-          
-          <div class="mb-3">
-            <%= f.label :description, "説明", class: "form-label" %>
-            <%= f.text_area :description, class: "form-control", rows: 3 %>
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label">タグ</label>
-            <div class="d-flex flex-wrap gap-2">
+        <% end %>
+        
+        <div class="mb-3">
+          <strong>説明:</strong>
+          <div class="mt-2"><%= simple_format(@prompt.description) %></div>
+        </div>
+        
+        <div>
+          <strong>タグ:</strong>
+          <div class="mt-2">
+            <% if @prompt.tags.any? %>
               <% @prompt.tags.each do |tag| %>
-                <div class="d-flex align-items-center">
-                  <span class="badge bg-info text-white"><%= tag.name %></span>
-                  <%= button_to prompt_tag_path(@prompt, tag), 
-                      method: :delete, 
-                      class: "btn btn-sm btn-link text-dark p-0 ms-1", 
-                      title: "削除",
-                      form: { 
-                        style: "display: inline;", 
-                        data: { turbo: false },
-                        id: "delete-tag-#{tag.id}"
-                      } do %>
-                    <i class="bi bi-x-circle-fill"></i>
+                <div class="badge bg-secondary p-2 me-2 mb-2 d-inline-flex align-items-center">
+                  <%= tag.name %>
+                  <%= button_to prompt_tag_path(@prompt, tag), method: :delete, class: "ms-2 btn-close btn-close-white", style: "font-size: 0.5rem; background-size: 0.5rem;", form: { style: "display: inline;" } do %>
                   <% end %>
                 </div>
               <% end %>
-            </div>
-            
-            <div class="mt-2 d-flex">
-              <%= form_with url: prompt_tags_path(@prompt), method: :post, class: "d-flex", data: { turbo: false } do |f| %>
-                <div class="input-group" style="max-width: 300px;">
-                  <%= f.text_field :tag, name: "tag[name]", class: "form-control form-control-sm", placeholder: "新しいタグ" %>
-                  <button type="submit" class="btn btn-sm btn-outline-secondary">追加</button>
-                </div>
-              <% end %>
-              
-              <%= button_to generate_tags_prompt_path(@prompt), method: :post, class: "btn btn-sm btn-outline-primary ms-2", data: { turbo: false } do %>
-                <i class="bi bi-tag"></i> タグを生成
-              <% end %>
-            </div>
+            <% else %>
+              <p>タグがありません</p>
+            <% end %>
           </div>
-          
-          <div class="d-flex justify-content-between">
-            <%= f.submit "保存", class: "btn btn-primary", data: { method: "patch" } %>
-            <%# プロンプト削除ボタン - 一時的にコメントアウト %>
-            <% 
-            # button_to prompt_path(@prompt), method: :delete, class: "btn btn-danger", form: { data: { turbo: false } }, data: { confirm: "本当に削除しますか？" } do 
-            #   削除
-            # end 
-            %>
-          </div>
-        <% end %>
+        </div>
       </div>
     </div>
     
-    <%# チャットインターフェース - 一時的にコメントアウト %>
-    <%
-    # <div class="card">
-    #   <div class="card-header">
-    #     <h5 class="mb-0">チャット</h5>
-    #   </div>
-    #   
-    #   <div class="card-body">
-    #     <!-- 過去の会話表示 -->
-    #     <div class="chat-history mb-3" style="max-height: 400px; overflow-y: auto;">
-    #       @conversations.each do |conversation|
-    #         <div id="conversation-#{conversation.id}" class="mb-3">
-    #           conversation.content.to_s.split(/\n\n+/).each do |paragraph|
-    #             if paragraph.start_with?("ユーザー:")
-    #               <div class="d-flex mb-2">
-    #                 <div class="bg-light p-2 rounded" style="max-width: 80%;">
-    #                   simple_format(paragraph)
-    #                 </div>
-    #               </div>
-    #             elsif paragraph.start_with?("AIアシスタント:")
-    #               <div class="d-flex mb-2 justify-content-end">
-    #                 <div class="bg-primary text-white p-2 rounded" style="max-width: 80%;">
-    #                   simple_format(paragraph)
-    #                 </div>
-    #               </div>
-    #             end
-    #           end
-    #         </div>
-    #       end
-    #     </div>
-    #     
-    #     <!-- 新規メッセージ入力 -->
-    #     form_with url: prompt_conversations_path(@prompt), method: :post, local: true, class: "chat-form" do |f|
-    #       <div class="input-group">
-    #         f.text_area :message, class: "form-control", placeholder: "メッセージを入力...", rows: 2
-    #         <button type="submit" class="btn btn-success">送信</button>
-    #       </div>
-    #     end
-    #   </div>
-    # </div>
-    %>
+    <%= link_to "← 一覧に戻る", prompts_path, class: "btn btn-outline-secondary" %>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">タグを追加</div>
+      <div class="card-body">
+        <%= form_with(model: [@prompt, @tag], local: true) do |f| %>
+          <div class="mb-3">
+            <%= f.label :name, "タグ名", class: "form-label" %>
+            <%= f.text_field :name, class: "form-control" %>
+          </div>
+          
+          <%= f.submit "追加", class: "btn btn-primary w-100" %>
+        <% end %>
+      </div>
+    </div>
   </div>
 </div>

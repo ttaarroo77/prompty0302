@@ -1,65 +1,66 @@
-<div class="container">
-  <div class="row mb-4">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="mb-0">新規プロンプト作成</h5>
-        </div>
-        <div class="card-body">
-          <%= form_with model: @prompt, local: true, data: { turbo: false } do |f| %>
-            <div class="mb-3">
-              <%= f.label :title, "タイトル", class: "form-label" %>
-              <%= f.text_field :title, class: "form-control", required: true %>
+<div class="row">
+  <div class="col-md-8">
+    <h1>プロンプト一覧</h1>
+    
+    <% if @prompts.any? %>
+      <div class="row">
+        <% @prompts.each do |prompt| %>
+          <div class="col-md-6 mb-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><%= prompt.title %></h5>
+                <p class="card-text text-truncate"><%= prompt.description %></p>
+                <div class="mb-2">
+                  <% prompt.tags.each do |tag| %>
+                    <span class="badge bg-secondary me-1"><%= tag.name %></span>
+                  <% end %>
+                </div>
+                <%= link_to "詳細", prompt_path(prompt), class: "btn btn-primary btn-sm" %>
+              </div>
             </div>
-            
-            <div class="mb-3">
-              <%= f.label :url, "URL", class: "form-label" %>
-              <%= f.text_field :url, class: "form-control" %>
-              <div class="form-text">オプション：参考URLがあれば入力してください</div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p>プロンプトがまだありません。新しいプロンプトを追加してください。</p>
+    <% end %>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        新しいプロンプト
+      </div>
+      <div class="card-body">
+        <%= form_with(model: @prompt, local: true) do |f| %>
+          <% if @prompt.errors.any? %>
+            <div class="alert alert-danger">
+              <ul class="mb-0">
+                <% @prompt.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
             </div>
-            
-            <div class="mb-3">
-              <%= f.label :description, "説明", class: "form-label" %>
-              <%= f.text_area :description, class: "form-control", rows: 3, required: true %>
-            </div>
-            
-            <%= f.submit "作成", class: "btn btn-primary" %>
           <% end %>
-        </div>
+          
+          <div class="mb-3">
+            <%= f.label :title, "タイトル", class: "form-label" %>
+            <%= f.text_field :title, class: "form-control" %>
+          </div>
+          
+          <div class="mb-3">
+            <%= f.label :url, "URL", class: "form-label" %>
+            <%= f.url_field :url, class: "form-control" %>
+          </div>
+          
+          <div class="mb-3">
+            <%= f.label :description, "説明", class: "form-label" %>
+            <%= f.text_area :description, rows: 5, class: "form-control" %>
+          </div>
+          
+          <%= f.submit "追加する", class: "btn btn-primary w-100" %>
+        <% end %>
       </div>
     </div>
   </div>
-  
-  <div class="row">
-    <div class="col-md-12">
-      <h3 class="mb-3">プロンプト一覧</h3>
-      
-      <% if @prompts.any? %>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-          <% @prompts.each do |prompt| %>
-            <div class="col">
-              <div class="card h-100">
-                <div class="card-body">
-                  <h5 class="card-title"><%= prompt.title %></h5>
-                  <p class="card-text text-truncate"><%= prompt.description %></p>
-                  <div class="d-flex flex-wrap gap-1 mb-2">
-                    <% prompt.tags.each do |tag| %>
-                      <span class="badge bg-info text-white"><%= tag.name %></span>
-                    <% end %>
-                  </div>
-                </div>
-                <div class="card-footer bg-white">
-                  <%= link_to "詳細", prompt_path(prompt), class: "btn btn-sm btn-outline-primary" %>
-                </div>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <div class="alert alert-info">
-          プロンプトがまだ登録されていません。新規作成してみましょう！
-        </div>
-      <% end %>
-    </div>
-  </div>
-</div> 
+</div>

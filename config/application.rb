@@ -2,14 +2,11 @@ require_relative "boot"
 
 require "rails/all"
 
-# Require dotenv to load environment variables from .env file before the app is loaded
-require 'dotenv/load' if Rails.env.development? || Rails.env.test?
-
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module Prompty
+module PromptyNew
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0

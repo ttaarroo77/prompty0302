@@ -16,11 +16,6 @@ gem "turbo-rails"
 gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
-# Bootstrap 5 for Rails
-gem "bootstrap", "~> 5.2.0"
-gem "sassc-rails"
-# OpenAI API クライアント
-gem "ruby-openai", "~> 7.4.0"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
@@ -66,5 +61,3 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
-
-gem "dotenv-rails", "~> 3.1"
