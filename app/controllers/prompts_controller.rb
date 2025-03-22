@@ -4,6 +4,8 @@ class PromptsController < ApplicationController
   def index
     @prompts = Prompt.all
     @prompt = Prompt.new
+    @all_tags = Tag.all.order(:name)
+    @standalone_tags = Tag.where(prompt_id: nil).order(:name)
   end
 
   def show
