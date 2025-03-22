@@ -1,0 +1,3 @@
+<%= turbo_stream.update "suggested-tags" do %>
+  <%= render partial: 'tags/suggested_tags', locals: { suggested_tags: @suggested_tags, prompt: @prompt } %>
+<% end %> 

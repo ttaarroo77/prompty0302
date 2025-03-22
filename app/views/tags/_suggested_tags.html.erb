@@ -1,0 +1,16 @@
+<% if suggested_tags.empty? %>
+  <div class="alert alert-info">
+    提案するタグが見つかりませんでした。
+  </div>
+<% else %>
+  <div class="suggested-tags-list mb-3">
+    <% suggested_tags.each do |tag| %>
+      <button type="button" 
+              class="btn btn-sm btn-outline-primary me-1 mb-1 suggested-tag-btn" 
+              data-tag-name="<%= tag.name %>">
+        <%= tag.name %>
+      </button>
+    <% end %>
+  </div>
+  <p class="small text-muted">タグをクリックすると入力欄に追加されます</p>
+<% end %> 
