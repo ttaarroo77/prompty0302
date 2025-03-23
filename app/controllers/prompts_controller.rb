@@ -2,7 +2,7 @@ class PromptsController < ApplicationController
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
 
   def index
-    @prompts = Prompt.all
+    @prompts = Prompt.all.order(created_at: :desc)
     @prompt = Prompt.new
     @all_tags = Tag.all.order(:name)
     @standalone_tags = Tag.where(prompt_id: nil).order(:name)
@@ -10,6 +10,7 @@ class PromptsController < ApplicationController
 
   def show
     @tag = Tag.new
+    @suggested_tags = []
   end
 
   def edit

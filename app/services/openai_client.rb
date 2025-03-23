@@ -4,80 +4,66 @@ class OpenaiClient
   def initialize
     api_key = ENV['OPENAI_API_KEY']
     
-    if api_key.blank? || api_key == 'your_api_key_here'
-      raise "OpenAI APIキーが設定されていません。.envファイルでOPENAI_API_KEYを設定してください。"
-    end
+    raise "OpenAI APIキーが設定されていません。.envファイルにOPENAI_API_KEYを設定してください。" if api_key.blank?
     
-    @client = OpenAI::Client.new(
-      access_token: api_key,
-      uri_base: ENV['OPENAI_URI_BASE'] || 'https://api.openai.com',
-      request_timeout: 240
-    )
+    @client = OpenAI::Client.new(access_token: api_key)
+  rescue LoadError => e
+    Rails.logger.error "OpenAI gemがインストールされていません: #{e.message}"
+    raise "OpenAI gemがインストールされていません。'bundle add openai'を実行してインストールしてください。"
   end
 
-  def generate_tag_suggestions(title, description, url, current_tags = [])
-    begin
-      prompt = generate_prompt(title, description, url, current_tags)
+  def generate_tag_suggestions(prompt)
+    # プロンプトの内容を取得
+    title = prompt.title.to_s
+    description = prompt.description.to_s
+    url = prompt.url.to_s
+    current_tags = prompt.tags.pluck(:name).join(", ")
+    
+    # APIリクエスト用のプロンプトを作成
+    prompt_text = <<~PROMPT
+      以下のプロンプト内容に合うタグを10個程度提案してください。タグは日本語か英語の単語またはフレーズで、SEOに効果的なものを選んでください。
       
+      タイトル: #{title}
+      説明: #{description}
+      #{"URL: #{url}" if url.present?}
+      #{"現在のタグ: #{current_tags}" if current_tags.present?}
+      
+      レスポンスは次の形式で返してください:
+      tag1, tag2, tag3, ...
+    PROMPT
+    
+    Rails.logger.info "OpenAI APIにリクエスト送信中..."
+    
+    begin
       response = @client.chat(
         parameters: {
-          model: ENV['OPENAI_MODEL'] || 'gpt-3.5-turbo',
-          messages: [
-            { role: 'system', content: 'あなたはタグ提案の専門家です。与えられた情報から最適なタグを提案してください。' },
-            { role: 'user', content: prompt }
-          ],
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: prompt_text }],
           temperature: 0.5,
-          max_tokens: 1000
+          max_tokens: 150
         }
       )
       
-      return process_response(response)
+      if response["error"].present?
+        Rails.logger.error "OpenAI APIエラー: #{response["error"]["message"]}"
+        raise "OpenAI APIエラー: #{response["error"]["message"]}"
+      end
+      
+      # レスポンスからタグを抽出
+      content = response.dig("choices", 0, "message", "content").to_s
+      
+      # カンマ区切りのタグリストを配列に変換
+      tags = content.split(/,\s*/).map(&:strip).reject(&:empty?)
+      
+      # 余分な記号や修飾を削除
+      tags = tags.map { |tag| tag.gsub(/^[#*"'`]|[#*"'`]$/, '').strip }
+      
+      Rails.logger.info "生成されたタグ: #{tags.inspect}"
+      
+      tags
     rescue => e
-      Rails.logger.error "OpenAI API エラー: #{e.message}"
-      return []
-    end
-  end
-
-  private
-
-  def generate_prompt(title, description, url, current_tags)
-    <<~PROMPT
-    以下の情報から最適なタグを提案してください。
-    
-    【タイトル】
-    #{title}
-    
-    【説明】
-    #{description}
-    
-    #{url.present? ? "【URL】\n#{url}\n\n" : ""}
-    #{current_tags.any? ? "【現在のタグ】\n#{current_tags.join(', ')}\n\n" : ""}
-    
-    【提案対象の既存タグ一覧】
-    #{Tag.where(prompt_id: nil).order(:name).pluck(:name).join(', ')}
-    
-    【条件】
-    - 上記の既存タグ一覧から選んでください
-    - 内容に最も関連性の高いものを5-10個選択してください
-    - JSONフォーマットで返してください：{"suggested_tags": ["タグ1", "タグ2", ...]}
-    PROMPT
-  end
-
-  def process_response(response)
-    return [] unless response.dig('choices', 0, 'message', 'content')
-    
-    content = response.dig('choices', 0, 'message', 'content')
-    
-    # JSONを抽出
-    json_match = content.match(/\{.*\}/m)
-    return [] unless json_match
-    
-    begin
-      json = JSON.parse(json_match[0])
-      return json['suggested_tags'] || []
-    rescue JSON::ParserError
-      Rails.logger.error "JSON解析エラー: #{content}"
-      return []
+      Rails.logger.error "OpenAI API呼び出し中にエラーが発生しました: #{e.message}"
+      raise "OpenAI API呼び出しエラー: #{e.message}"
     end
   end
 end 

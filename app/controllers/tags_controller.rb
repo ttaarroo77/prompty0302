@@ -19,21 +19,26 @@ class TagsController < ApplicationController
   end
 
   def suggest
-    @suggested_tags = []
-    
+    Rails.logger.info "タグ提案開始: Prompt #{@prompt.id}"
     begin
-      service = TagSuggestionService.new(@prompt)
-      suggested_tag_names = service.suggest_tags
-      @suggested_tags = service.find_matching_tags(suggested_tag_names)
+      service = TagSuggestionService.new
+      @suggested_tags = service.suggest_tags(@prompt)
+      
+      Rails.logger.info "生成されたタグ名: #{@suggested_tags.map(&:name).join(', ')}"
+      
+      respond_to do |format|
+        format.turbo_stream
+        format.html { render :suggest }
+      end
     rescue => e
       Rails.logger.error "タグ提案エラー: #{e.message}"
-      # エラーが発生しても@suggested_tagsは空の配列のままなので、
-      # 「提案するタグが見つかりませんでした」というメッセージが表示される
-    end
-    
-    respond_to do |format|
-      format.turbo_stream
-      format.html { redirect_to @prompt }
+      flash.now[:alert] = "タグの提案に失敗しました: #{e.message.include?('API key') ? 'APIキーが設定されていません' : e.message}"
+      @suggested_tags = []
+      
+      respond_to do |format|
+        format.turbo_stream
+        format.html { render :suggest }
+      end
     end
   end
 

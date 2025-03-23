@@ -76,3 +76,65 @@ puts "サンプルデータの作成が完了しました。"
 puts "プロンプト数: #{Prompt.count}"
 puts "関連付けられたタグ数: #{Tag.where.not(prompt_id: nil).count}"
 puts "登録件数0のタグ数: #{Tag.where(prompt_id: nil).count}"
+
+# 全体で使えるタグ一覧を作成
+existing_global_tags = Tag.where(prompt_id: nil).pluck(:name)
+puts "既存のグローバルタグ: #{existing_global_tags.count}件"
+
+# 追加したい新しいタグを指定
+new_tag_names = %w[
+  ビジネス
+  ココナラ
+  マーケティング
+  AI
+  ChatGPT
+  GPT-4
+  プロフィール最適化
+  執筆代行
+  プレゼン
+  自己PR
+  レポート
+  論文
+  要約
+  議事録
+  企画書
+  提案書
+  ポートフォリオ
+] - existing_global_tags  # 既存のタグを除外
+
+# 新しいグローバルタグを作成
+created_count = 0
+new_tag_names.each do |name|
+  begin
+    Tag.create!(name: name, prompt_id: nil)
+    created_count += 1
+    puts "タグ '#{name}' を作成しました"
+  rescue ActiveRecord::RecordInvalid => e
+    puts "タグ '#{name}' はスキップされました: #{e.message}"
+  end
+end
+
+puts "グローバルタグ #{created_count}件を作成しました。全タグ数：#{Tag.where(prompt_id: nil).count}件"
+
+# サンプルのプロンプトを作成
+if Prompt.count.zero?
+  prompt = Prompt.create!(
+    title: "ココナラのプロフィールを最適化",
+    description: "ココナラで仕事を獲得するための効果的なプロフィールの書き方を教えてください。私はWebデザインとマーケティングが専門です。",
+    url: "https://coconala.com/",
+  )
+  
+  # サンプルプロンプトにタグを付ける
+  tag_count = 0
+  %w[プロフィール ビジネス ココナラ マーケティング 自己PR].each do |tag_name|
+    begin
+      prompt.tags.create!(name: tag_name)
+      tag_count += 1
+      puts "プロンプトに '#{tag_name}' タグを追加しました"
+    rescue ActiveRecord::RecordInvalid => e
+      puts "タグ '#{tag_name}' の追加はスキップされました: #{e.message}"
+    end
+  end
+  
+  puts "サンプルプロンプトを作成し、#{tag_count}件のタグを付与しました。"
+end

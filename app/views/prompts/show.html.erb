@@ -1,4 +1,20 @@
 <div class="row">
+  <div id="flash-messages">
+    <% if notice %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= notice %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% end %>
+    
+    <% if alert %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= alert %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% end %>
+  </div>
+
   <div class="col-md-8">
     <div class="card mb-4">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -47,51 +63,85 @@
   
   <div class="col-md-4">
     <div class="card mb-4">
-      <div class="card-header">タグを追加</div>
-      <div class="card-body">
-        <%= form_with(model: [@prompt, @tag], local: true) do |f| %>
-          <div class="mb-3">
-            <%= f.label :name, "タグ名", class: "form-label" %>
-            <%= f.text_field :name, class: "form-control" %>
-          </div>
-          
-          <%= f.submit "追加", class: "btn btn-primary w-100" %>
-        <% end %>
+      <div class="card-header">
+        <h5 class="mb-0">タグ</h5>
       </div>
-    </div>
-    
-    <div class="card">
-      <div class="card-header">AIタグ提案</div>
       <div class="card-body">
-        <p class="small text-muted mb-3">タイトル、説明、URLを元に、AIが最適なタグを提案します。</p>
-        
-        <div id="suggested-tags-container">
-          <% if @suggested_tags&.any? %>
-            <div class="mb-3">
-              <h6>提案タグ:</h6>
-              <div id="suggested-tags">
-                <%= render partial: 'tags/suggested_tags', locals: { suggested_tags: @suggested_tags, prompt: @prompt } %>
-              </div>
+        <!-- 既存のタグを表示 -->
+        <div class="mb-3">
+          <% @prompt.tags.each do |tag| %>
+            <div class="badge bg-primary text-white me-1 p-2 mb-1">
+              <%= tag.name %>
+              <%= button_to '×', prompt_tag_path(@prompt, tag), method: :delete, class: 'btn-close btn-close-white ms-1', form: { style: 'display: inline;' }, form_class: 'd-inline', aria: { label: 'タグを削除' }, data: { confirm: '本当に削除しますか？' } %>
             </div>
           <% end %>
         </div>
-        
-        <%= form_with(url: suggest_prompt_tags_path(@prompt), data: { turbo_frame: "suggested-tags" }) do |f| %>
-          <%= f.submit "AIにタグを提案してもらう", class: "btn btn-outline-primary w-100", 
-                       data: { disable_with: "生成中..." } %>
+
+        <!-- タグ追加フォーム -->
+        <%= form_with(model: [@prompt, Tag.new], local: true, class: 'mb-3 new_tag') do |form| %>
+          <div class="input-group">
+            <%= form.text_field :name, class: 'form-control', placeholder: '新しいタグを追加...' %>
+            <button type="submit" class="btn btn-primary">追加</button>
+          </div>
         <% end %>
+
+        <!-- タグ提案セクション -->
+        <div class="mb-3">
+          <h6>AIタグ提案:</h6>
+          
+          <div id="suggested-tags-container">
+            <%= turbo_frame_tag "suggested-tags" do %>
+              <% if @suggested_tags.nil? || @suggested_tags.empty? %>
+                <div class="alert alert-light">
+                  <p>AIにタグを提案してもらうボタンをクリックすると、ここにタグが表示されます。</p>
+                </div>
+              <% else %>
+                <h6 class="card-title">提案されたタグ</h6>
+                <p class="text-muted small mb-2">タグをクリックで追加できます</p>
+                <div class="mb-2">
+                  <% @suggested_tags.each do |tag| %>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-primary me-1 mb-1 suggested-tag-btn" 
+                            data-tag-name="<%= tag.name %>">
+                      <%= tag.name %>
+                    </button>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+          
+          <%= link_to "AIにタグを提案してもらう", suggest_prompt_tags_path(@prompt), 
+              class: "btn btn-outline-primary w-100 mt-2", 
+              data: { turbo_frame: "suggested-tags" },
+              id: "suggest-tags-button" %>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<%= turbo_frame_tag "suggested-tags" %>
-
 <script>
-  document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('suggested-tag-btn')) {
-      const tagName = event.target.dataset.tagName;
-      document.getElementById('tag_name').value = tagName;
-    }
+  document.addEventListener('DOMContentLoaded', function() {
+    // タグ提案ボタンクリック処理
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.suggested-tag-btn')) {
+        const tagName = e.target.closest('.suggested-tag-btn').dataset.tagName;
+        const tagInput = document.querySelector('input[name="tag[name]"]');
+        
+        if (tagInput) {
+          tagInput.value = tagName;
+          // タグを追加用フォームを自動的に送信
+          const tagForm = document.querySelector('form.new_tag');
+          if (tagForm) {
+            tagForm.submit();
+          }
+        }
+      }
+    });
+    
+    // コンソールにデバッグ情報を出力
+    console.log('DOM ready in prompt show view');
+    console.log('Suggested tag buttons:', document.querySelectorAll('.suggested-tag-btn').length);
   });
 </script>
