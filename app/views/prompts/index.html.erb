@@ -1,6 +1,17 @@
 <div class="row">
   <div class="col-md-8">
-    <h1>プロンプト一覧</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>プロンプト一覧</h1>
+      <% if params[:tag].present? %>
+        <div class="d-flex align-items-center">
+          <span class="me-2">フィルター:</span>
+          <span class="badge bg-dark me-2"><%= params[:tag] %></span>
+          <%= link_to prompts_path, class: "btn btn-sm btn-outline-secondary" do %>
+            <i class="bi bi-x"></i> クリア
+          <% end %>
+        </div>
+      <% end %>
+    </div>
     
     <% if @prompts.any? %>
       <div class="row">
@@ -12,10 +23,12 @@
                 <p class="card-text text-truncate"><%= prompt.description %></p>
                 <div class="mb-2">
                   <% prompt.tags.each do |tag| %>
-                    <span class="badge bg-secondary me-1"><%= tag.name %></span>
+                    <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
+                      <%= tag.name %>
+                    <% end %>
                   <% end %>
                 </div>
-                <%= link_to "詳細", prompt_path(prompt), class: "btn btn-primary btn-sm" %>
+                <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
               </div>
             </div>
           </div>
@@ -58,7 +71,7 @@
             <%= f.text_area :description, rows: 5, class: "form-control" %>
           </div>
           
-          <%= f.submit "追加する", class: "btn btn-primary w-100" %>
+          <%= f.submit "追加する", class: "btn btn-dark w-100" %>
         <% end %>
       </div>
     </div>
@@ -66,15 +79,18 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span>既存タグ一覧</span>
-        <span class="badge bg-info"><%= @standalone_tags.count %>タグ</span>
+        <span class="badge text-dark"><%= @all_tag_names.count %>タグ</span>
       </div>
       <div class="card-body">
         <div class="mb-3">
           <input type="text" id="tagSearch" class="form-control form-control-sm" placeholder="タグを検索...">
         </div>
         <div class="tag-cloud" style="max-height: 300px; overflow-y: auto;">
-          <% @standalone_tags.each do |tag| %>
-            <span class="badge bg-light text-dark me-1 mb-1 tag-item"><%= tag.name %></span>
+          <% @all_tag_names.each do |tag_name| %>
+            <%= link_to prompts_path(tag: tag_name), class: "badge bg-light text-dark text-decoration-none me-1 mb-1 tag-item" do %>
+              <%= tag_name %>
+              <span class="ms-1 text-secondary">(<%= @tag_counts[tag_name] || 0 %>)</span>
+            <% end %>
           <% end %>
         </div>
       </div>

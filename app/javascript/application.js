@@ -62,8 +62,35 @@ function initializeEventListeners() {
     });
   });
 
+  // 既存タグ一覧のタグクリック処理 (検索用)
+  document.querySelectorAll('.tag-item').forEach(function (tagLink) {
+    tagLink.addEventListener('click', function () {
+      console.log('Tag clicked for search:', this.textContent.trim());
+    });
+  });
+
+  // タグ検索のフィルタリング機能
+  const searchInput = document.getElementById('tagSearch');
+  if (searchInput) {
+    const tagItems = document.querySelectorAll('.tag-item');
+
+    searchInput.addEventListener('input', function () {
+      const searchValue = this.value.toLowerCase();
+
+      tagItems.forEach(function (item) {
+        const tagName = item.textContent.toLowerCase();
+        if (tagName.includes(searchValue)) {
+          item.style.display = 'inline-block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  }
+
   // コンソールにデバッグ情報を出力
   console.log('Event listeners initialized');
   console.log('Delete form found:', !!document.querySelector('form[action$="/destroy"]'));
   console.log('Suggested tag buttons:', document.querySelectorAll('.suggested-tag-btn').length);
+  console.log('Tag items for search:', document.querySelectorAll('.tag-item').length);
 }

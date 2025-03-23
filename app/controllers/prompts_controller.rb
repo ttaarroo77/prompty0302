@@ -2,10 +2,31 @@ class PromptsController < ApplicationController
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
 
   def index
-    @prompts = Prompt.all.order(created_at: :desc)
+    @prompts = if params[:tag].present?
+      tag_name = params[:tag]
+      # タグ名で検索する場合は、タグを持つプロンプトを検索
+      prompt_ids = Tag.where(name: tag_name).pluck(:prompt_id).compact
+      Prompt.where(id: prompt_ids).order(created_at: :desc)
+    else
+      Prompt.all.order(created_at: :desc)
+    end
+    
     @prompt = Prompt.new
-    @all_tags = Tag.all.order(:name)
+    
+    # すべてのプロンプトから使用されているタグ名を取得
+    used_tag_names = Tag.where.not(prompt_id: nil).pluck(:name).uniq
+    
+    # スタンドアロンタグを取得
     @standalone_tags = Tag.where(prompt_id: nil).order(:name)
+    
+    # プロンプトと紐づいたタグも「既存タグ」として表示するため、両方のタグを結合
+    @all_tag_names = (used_tag_names + @standalone_tags.pluck(:name)).uniq.sort
+    
+    # タグの使用回数を計算
+    @tag_counts = {}
+    @all_tag_names.each do |tag_name|
+      @tag_counts[tag_name] = Tag.where(name: tag_name).where.not(prompt_id: nil).count
+    end
   end
 
   def show
