@@ -1,3 +1,6 @@
+<%= csrf_meta_tags %>
+<%= csp_meta_tag %>
+
 <div class="row">
   <div id="flash-messages">
     <% if notice %>
@@ -130,10 +133,79 @@
         
         if (tagInput) {
           tagInput.value = tagName;
-          // タグを追加用フォームを自動的に送信
+          
+          // タグを追加用フォームを非同期で送信し、ページリロードを防止
           const tagForm = document.querySelector('form.new_tag');
           if (tagForm) {
-            tagForm.submit();
+            e.preventDefault(); // デフォルトのクリック動作を防止
+            
+            // Fetchを使用して非同期でタグを追加
+            fetch(tagForm.action, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+              },
+              body: new URLSearchParams(new FormData(tagForm))
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                // タグリストを更新
+                const promptTagsContainer = document.getElementById('prompt-tags');
+                const newTagElement = document.createElement('div');
+                newTagElement.className = 'badge bg-secondary p-2 me-2 mb-2 d-inline-flex align-items-center';
+                newTagElement.innerHTML = `
+                  ${tagName}
+                  <form action="/prompts/${data.prompt_id}/tags/${data.tag_id}" method="post" style="display: inline;">
+                    <input type="hidden" name="_method" value="delete">
+                    <input type="hidden" name="authenticity_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                    <button type="submit" class="ms-2 btn-close btn-close-white" style="font-size: 0.5rem; background-size: 0.5rem;"></button>
+                  </form>
+                `;
+                
+                // 「タグがありません」を削除
+                const noTagsMessage = promptTagsContainer.querySelector('p');
+                if (noTagsMessage && noTagsMessage.textContent === 'タグがありません') {
+                  noTagsMessage.remove();
+                }
+                
+                promptTagsContainer.appendChild(newTagElement);
+                
+                // 追加したタグボタンを非表示にする
+                e.target.closest('.suggested-tag-btn').style.display = 'none';
+                
+                // 成功メッセージを表示
+                const flashContainer = document.getElementById('flash-messages');
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show';
+                successAlert.setAttribute('role', 'alert');
+                successAlert.innerHTML = `
+                  タグが追加されました。
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                flashContainer.appendChild(successAlert);
+                
+                // 5秒後にメッセージを自動的に非表示
+                setTimeout(() => {
+                  successAlert.remove();
+                }, 5000);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              
+              // エラーメッセージを表示
+              const flashContainer = document.getElementById('flash-messages');
+              const errorAlert = document.createElement('div');
+              errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+              errorAlert.setAttribute('role', 'alert');
+              errorAlert.innerHTML = `
+                タグの追加に失敗しました。
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              `;
+              flashContainer.appendChild(errorAlert);
+            });
           }
         }
       }

@@ -11,7 +11,9 @@ class PromptsController < ApplicationController
   def show
     @tag = Tag.new
     @suggested_tags = []
+    
     if params[:suggested] == 'true'
+      # タグ提案ボタンが押された場合
       begin
         service = TagSuggestionService.new
         @suggested_tags = service.suggest_tags(@prompt)
@@ -21,6 +23,15 @@ class PromptsController < ApplicationController
         flash.now[:alert] = "タグの提案に失敗しました: #{e.message.include?('API key') ? 'APIキーが設定されていません' : e.message}"
         @suggested_tags = []
       end
+    elsif params[:suggested_tag_ids].present?
+      # タグ追加/削除後のリダイレクトで提案タグIDが渡された場合
+      tag_ids = params[:suggested_tag_ids].is_a?(Array) ? params[:suggested_tag_ids] : params[:suggested_tag_ids].split(',')
+      @suggested_tags = Tag.where(id: tag_ids)
+      Rails.logger.info "パラメータから復元したタグ提案: #{@suggested_tags.map(&:name).inspect}"
+    elsif session[:suggested_tag_ids].present?
+      # セッションに保存されたタグIDがある場合
+      @suggested_tags = Tag.where(id: session[:suggested_tag_ids])
+      Rails.logger.info "セッションから復元したタグ提案: #{@suggested_tags.map(&:name).inspect}"
     end
   end
 
