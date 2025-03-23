@@ -18,13 +18,16 @@ class TagSuggestionService
     begin
       Rails.logger.info "OpenAI APIを使用してタグを生成します: Prompt ID #{prompt.id}"
       
-      # OpenAI APIを使用してタグを生成
-      tag_names = @openai_client.generate_tag_suggestions(prompt)
+      # 既存のタグ一覧を取得
+      existing_tags = get_existing_tags
+      
+      # OpenAI APIを使用してタグを生成（既存タグの中から選択）
+      tag_names = @openai_client.generate_tag_suggestions(prompt, existing_tags)
       
       Rails.logger.info "OpenAI APIからのレスポンス: #{tag_names.inspect}"
       
-      # 生成されたタグから既存のタグを探すか作成する
-      create_or_find_tags(tag_names, prompt)
+      # 既存タグから一致するものを探す
+      find_matching_tags(tag_names)
     rescue => e
       Rails.logger.error "OpenAI APIでエラーが発生しました: #{e.message}"
       Rails.logger.info "フォールバックメカニズムを使用します"
@@ -35,59 +38,37 @@ class TagSuggestionService
 
   private
 
-  def fallback_tags(prompt)
-    # フォールバックメカニズム: プロンプトの内容から基本的なタグを生成
-    fallback_tag_names = suggest_tags_from_content(prompt)
-    create_or_find_tags(fallback_tag_names, prompt)
+  def get_existing_tags
+    # スタンドアロンタグとプロンプトに紐づくタグを取得
+    standalone_tags = Tag.where(prompt_id: nil).pluck(:name)
+    prompt_tags = Tag.where.not(prompt_id: nil).pluck(:name)
+    
+    # 重複を除去してソート
+    (standalone_tags + prompt_tags).uniq.sort
   end
 
-  def create_or_find_tags(tag_names, prompt)
+  def find_matching_tags(tag_names)
     tags = []
     tag_names.uniq.first(MAX_TAGS).each do |name|
-      # 特殊文字を削除し、空白をアンダースコアに変換
+      # 正規化された名前で既存タグを検索
       normalized_name = name.gsub(/[^\p{L}\p{N}\s_-]/u, '').strip
-      
       next if normalized_name.blank?
       
-      # 既存のタグ（グローバルタグ）を優先的に使用
+      # 既存のタグを検索（スタンドアロンタグを優先）
       tag = Tag.where(prompt_id: nil).find_by(name: normalized_name)
+      tag ||= Tag.where.not(prompt_id: nil).find_by(name: normalized_name)
       
-      # グローバルタグが見つからない場合は、新しいタグを作成
-      tag ||= Tag.new(name: normalized_name)
-      
-      tags << tag unless tags.include?(tag)
+      tags << tag if tag && !tags.include?(tag)
     end
     
     Rails.logger.info "提案タグ: #{tags.map(&:name).join(', ')}"
     tags
   end
 
-  def suggest_tags_from_content(prompt)
-    tags = BASIC_TAGS.dup
-    
-    # プロンプトのタイトルと説明から単語を抽出
-    content = "#{prompt.title} #{prompt.description}"
-    
-    # 日本語の単語を抽出（簡易的な実装）
-    japanese_words = content.scan(/[\p{Han}\p{Hiragana}\p{Katakana}]{2,}/u).uniq
-    
-    # 英語の単語を抽出
-    english_words = content.scan(/\b[a-zA-Z]{4,}\b/).uniq
-    
-    # 抽出した単語を追加
-    tags += japanese_words.first(5) + english_words.first(5)
-    
-    # URLからドメイン名を抽出
-    if prompt.url.present?
-      begin
-        domain = URI.parse(prompt.url).host
-        domain = domain.sub(/^www\./, '') if domain
-        tags << domain if domain
-      rescue URI::InvalidURIError
-        # 無効なURLは無視
-      end
-    end
-    
-    tags.uniq.first(MAX_TAGS)
+  def fallback_tags(prompt)
+    # フォールバックメカニズム: 既存タグの中から基本的なタグを選択
+    existing_tags = get_existing_tags
+    fallback_tag_names = (BASIC_TAGS & existing_tags) # 既存タグとの共通部分のみを使用
+    find_matching_tags(fallback_tag_names)
   end
 end

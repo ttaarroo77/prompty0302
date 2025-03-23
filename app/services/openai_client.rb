@@ -12,7 +12,7 @@ class OpenaiClient
     raise "OpenAI gemがインストールされていません。'bundle add openai'を実行してインストールしてください。"
   end
 
-  def generate_tag_suggestions(prompt)
+  def generate_tag_suggestions(prompt, existing_tags)
     # プロンプトの内容を取得
     title = prompt.title.to_s
     description = prompt.description.to_s
@@ -21,15 +21,25 @@ class OpenaiClient
     
     # APIリクエスト用のプロンプトを作成
     prompt_text = <<~PROMPT
-      以下のプロンプト内容に合うタグを10個程度提案してください。タグは日本語か英語の単語またはフレーズで、SEOに効果的なものを選んでください。
+      以下のプロンプト内容に最も関連する既存タグを5つ選んでください。
+      必ず以下の「利用可能なタグ一覧」から選択し、新しいタグは作成しないでください。
       
+      【プロンプト情報】
       タイトル: #{title}
       説明: #{description}
       #{"URL: #{url}" if url.present?}
       #{"現在のタグ: #{current_tags}" if current_tags.present?}
       
-      レスポンスは次の形式で返してください:
-      tag1, tag2, tag3, ...
+      【利用可能なタグ一覧】
+      #{existing_tags.join(", ")}
+      
+      【レスポンス形式】
+      - 必ず「利用可能なタグ一覧」に含まれるタグのみを選択してください
+      - カンマ区切りで出力してください
+      - 数字や記号を追加しないでください
+      - 新しいタグを作成しないでください
+      
+      レスポンス:
     PROMPT
     
     Rails.logger.info "OpenAI APIにリクエスト送信中..."
@@ -38,8 +48,17 @@ class OpenaiClient
       response = @client.chat(
         parameters: {
           model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: prompt_text }],
-          temperature: 0.5,
+          messages: [
+            { 
+              role: "system", 
+              content: "あなたは既存タグの中から最適なものを選ぶアシスタントです。新しいタグは絶対に作成せず、与えられたタグリストの中からのみ選択してください。"
+            },
+            { 
+              role: "user", 
+              content: prompt_text 
+            }
+          ],
+          temperature: 0.3, # より決定論的な結果を得るために温度を下げる
           max_tokens: 150
         }
       )
@@ -55,12 +74,12 @@ class OpenaiClient
       # カンマ区切りのタグリストを配列に変換
       tags = content.split(/,\s*/).map(&:strip).reject(&:empty?)
       
-      # 余分な記号や修飾を削除
-      tags = tags.map { |tag| tag.gsub(/^[#*"'`]|[#*"'`]$/, '').strip }
+      # 既存タグリストに含まれるもののみをフィルタリング
+      valid_tags = tags.select { |tag| existing_tags.include?(tag) }
       
-      Rails.logger.info "生成されたタグ: #{tags.inspect}"
+      Rails.logger.info "生成されたタグ: #{valid_tags.inspect}"
       
-      tags
+      valid_tags
     rescue => e
       Rails.logger.error "OpenAI API呼び出し中にエラーが発生しました: #{e.message}"
       raise "OpenAI API呼び出しエラー: #{e.message}"
