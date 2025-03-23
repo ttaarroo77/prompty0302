@@ -1,24 +1,35 @@
-# README
+# Prompty - プロンプト管理アプリ
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## 利用可能なGitタグ
 
-Things you may want to cover:
+このプロジェクトには以下のタグが設定されています。特定の機能状態に戻りたい場合は、対応するタグをチェックアウトしてください。
 
-* Ruby version
+### タグ一覧
 
-* System dependencies
+- **tag-suggestion-improvement**: 
+  タグ提案機能の基本実装。Turbo Frameを使用した非同期タグ提案機能です。
+  ```
+  git checkout tag-suggestion-improvement
+  ```
 
-* Configuration
+- **inline-tag-suggestion**: 
+  プロンプト詳細ページ内で直接タグ提案を表示する機能の実装。ページ遷移なしでタグ提案が可能になりました。
+  ```
+  git checkout inline-tag-suggestion
+  ```
 
-* Database creation
+## タグの使い方
 
-* Database initialization
+特定のタグの状態に戻る場合は、以下のコマンドを実行してください：
 
-* How to run the test suite
+```bash
+git checkout [タグ名]
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+例えば：
 
-* Deployment instructions
+```bash
+git checkout inline-tag-suggestion
+```
 
-* ...
+これにより、そのタグが作成された時点のコードの状態に戻ります。

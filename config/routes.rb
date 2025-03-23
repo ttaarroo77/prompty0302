@@ -1,14 +1,23 @@
 Rails.application.routes.draw do
-  resources :prompts, only: [:index, :show, :create, :update, :destroy] do
-    # タグ生成機能
-    member do
-      post :generate_tags
+  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+
+  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
+  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  get "up" => "rails/health#show", as: :rails_health_check
+
+  # Defines the root path route ("/")
+  root "prompts#index"
+  
+  # プロンプトのリソース定義
+  # edit アクションを除外（詳細ページで編集機能を提供）
+  resources :prompts, except: [:edit] do
+    resources :tags, only: [:create, :destroy] do
+      collection do
+        get :suggest
+      end
     end
-    
-    resources :conversations, only: [:create]
-    resources :tags, only: [:create, :destroy]
   end
   
-  # デフォルトのルートをプロンプト一覧ページに設定（ID指定なし）
-  root to: 'prompts#index'
+  # 古い編集URLへのアクセスを詳細ページにリダイレクト
+  get '/prompts/:id/edit', to: redirect('/prompts/%{id}')
 end

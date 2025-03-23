@@ -1,0 +1,48 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">タグ提案</h5>
+        </div>
+        <div class="card-body">
+          <% if @suggested_tags.nil? || @suggested_tags.empty? %>
+            <div class="alert alert-warning">
+              <p>タグが見つかりませんでした。</p>
+              <p>別のプロンプトで試すか、OpenAI APIキーが正しく設定されているか確認してください。</p>
+            </div>
+          <% else %>
+            <h6>提案されたタグ:</h6>
+            <p class="text-muted small">タグをクリックすると追加できます</p>
+            <div class="mb-4">
+              <% @suggested_tags.each do |tag| %>
+                <form action="<%= prompt_tags_path(@prompt) %>" method="post" style="display: inline;">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <input type="hidden" name="tag[name]" value="<%= tag.name %>">
+                  <button type="submit" class="btn btn-outline-primary me-1 mb-1"><%= tag.name %></button>
+                </form>
+              <% end %>
+            </div>
+          <% end %>
+          
+          <div class="mt-4">
+            <%= link_to "← プロンプト詳細に戻る", prompt_path(@prompt), class: "btn btn-secondary" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // もしTurboが有効であれば、Turboのフォーム送信をサポート
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded in suggest.html.erb');
+    document.querySelectorAll('form').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        const tagName = this.querySelector('input[name="tag[name]"]').value;
+        console.log('タグ追加: ' + tagName);
+      });
+    });
+  });
+</script> 

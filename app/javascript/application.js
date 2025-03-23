@@ -1,138 +1,69 @@
-// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
+// Entry point for the build script in your package.json
 import "@hotwired/turbo-rails"
-import "controllers"
+import "./controllers"
+import * as bootstrap from "bootstrap"
 
-// Bootstrap
-import "bootstrap"
-import "@popperjs/core"
+document.addEventListener('turbo:load', function () {
+  console.log('Turbo:load fired!');
+  initializeEventListeners();
 
-// イベントハンドラの設定
-document.addEventListener('DOMContentLoaded', function () {
-  // すべてのフォームに対してCSRFトークンの更新処理を追加
-  document.querySelectorAll('form').forEach(function (form) {
-    form.addEventListener('submit', function () {
-      const metaTag = document.querySelector('meta[name="csrf-token"]');
-      if (metaTag) {
-        const token = metaTag.content;
-        const input = form.querySelector('input[name="authenticity_token"]');
-        if (input) input.value = token;
-      }
-    });
+  // Bootstrap tooltips initialization
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
   });
-
-  // タグ生成ボタンのイベントハンドラ
-  const tagGenerateBtn = document.querySelector('form[action*="generate_tags"]');
-  if (tagGenerateBtn) {
-    tagGenerateBtn.addEventListener('submit', function (e) {
-      e.preventDefault();
-      fetch(this.action, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'same-origin'
-      })
-        .then(response => {
-          if (response.ok) {
-            window.location.reload();
-          } else {
-            console.error('タグ生成に失敗しました');
-          }
-        })
-        .catch(error => {
-          console.error('エラー:', error);
-        });
-    });
-  }
-
-  // プロンプト削除ボタンのイベントハンドラ（コメントアウト）
-  /*
-  const deletePromptBtn = document.querySelector('form[action*="/prompts/"][method="post"] input[name="_method"][value="delete"]');
-  if (deletePromptBtn) {
-    const form = deletePromptBtn.closest('form');
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (confirm('このプロンプトを削除してもよろしいですか？')) {
-        fetch(this.action, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'same-origin'
-        })
-          .then(response => {
-            if (response.ok) {
-              window.location.href = '/';
-            } else {
-              console.error('削除に失敗しました');
-            }
-          })
-          .catch(error => {
-            console.error('エラー:', error);
-          });
-      }
-    });
-  }
-  */
-
-  // タグ削除ボタンのイベントハンドラ
-  document.querySelectorAll('form[id^="delete-tag-"]').forEach(function (form) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const url = this.getAttribute('action');
-      console.log('タグを削除: ' + url);
-
-      fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'same-origin'
-      })
-        .then(response => {
-          if (response.ok) {
-            window.location.reload();
-          } else {
-            console.error('タグの削除に失敗しました');
-          }
-        })
-        .catch(error => {
-          console.error('エラー:', error);
-        });
-    });
-  });
-
-  // タグ追加フォームのイベントハンドラ
-  const tagAddForm = document.querySelector('form[action*="/tags"][method="post"]');
-  if (tagAddForm) {
-    tagAddForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-
-      fetch(this.action, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-        },
-        body: formData,
-        credentials: 'same-origin'
-      })
-        .then(response => {
-          if (response.ok) {
-            window.location.reload();
-          } else {
-            console.error('タグの追加に失敗しました');
-          }
-        })
-        .catch(error => {
-          console.error('エラー:', error);
-        });
-    });
-  }
 });
+
+// DOMContentLoaded for the first page load
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('DOMContentLoaded fired!');
+  initializeEventListeners();
+});
+
+// Add event listener for Turbo events
+document.addEventListener('turbo:render', function () {
+  console.log('Turbo:render fired!');
+  initializeEventListeners();
+});
+
+document.addEventListener('turbo:frame-render', function (event) {
+  console.log('Turbo frame rendered:', event.target.id);
+  initializeEventListeners();
+});
+
+function initializeEventListeners() {
+  // Delete confirmation for prompts
+  const deleteForm = document.querySelector('form[action$="/destroy"]');
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', function (e) {
+      if (!confirm('本当に削除しますか？')) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  // タグ提案ボタンクリック処理
+  document.querySelectorAll('.suggested-tag-btn').forEach(function (btn) {
+    console.log('Added click listener to tag button:', btn.textContent.trim());
+    btn.addEventListener('click', function () {
+      const tagName = this.dataset.tagName;
+      const tagInput = document.querySelector('input[name="tag[name]"]');
+
+      if (tagInput) {
+        tagInput.value = tagName;
+        console.log('Set tag input value to:', tagName);
+        // タグを追加用フォームを自動的に送信
+        const tagForm = document.querySelector('form.new_tag');
+        if (tagForm) {
+          console.log('Submitting tag form');
+          tagForm.submit();
+        }
+      }
+    });
+  });
+
+  // コンソールにデバッグ情報を出力
+  console.log('Event listeners initialized');
+  console.log('Delete form found:', !!document.querySelector('form[action$="/destroy"]'));
+  console.log('Suggested tag buttons:', document.querySelectorAll('.suggested-tag-btn').length);
+}
