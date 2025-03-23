@@ -2,22 +2,6 @@
 <%= csp_meta_tag %>
 
 <div class="row">
-  <div id="flash-messages">
-    <% if notice %>
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <%= notice %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    <% end %>
-    
-    <% if alert %>
-      <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <%= alert %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    <% end %>
-  </div>
-
   <div class="col-md-8">
     <div class="card mb-4">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -228,7 +212,7 @@
               tagInput.value = '';
               
               // 5. 成功メッセージを表示
-              const flashContainer = document.getElementById('flash-messages');
+              const flashContainer = document.getElementById('flash-container');
               if (flashContainer) {
                 // 古いアラートをクリア
                 const existingAlerts = flashContainer.querySelectorAll('.alert');
@@ -257,7 +241,7 @@
             console.error('エラー:', error);
             
             // エラーメッセージを表示
-            const flashContainer = document.getElementById('flash-messages');
+            const flashContainer = document.getElementById('flash-container');
             if (flashContainer) {
               // 古いアラートをクリア
               const existingAlerts = flashContainer.querySelectorAll('.alert');
@@ -296,40 +280,18 @@
           },
           body: formData
         })
-        .then(response => {
-          if (!response.ok) {
-            return response.json().then(data => Promise.reject(data));
-          }
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
           if (data.success) {
-            // 更新成功時の処理
+            console.log('プロンプト更新成功:', data);
+            
             // ビューを更新
-            document.querySelector('#view-mode h2').textContent = data.prompt.title;
-            
-            if (data.prompt.url) {
-              const urlContainer = document.querySelector('#view-mode .mb-3:nth-child(2)');
-              if (urlContainer) {
-                urlContainer.innerHTML = `
-                  <strong>URL:</strong>
-                  <a href="${data.prompt.url}" target="_blank">${data.prompt.url}</a>
-                `;
-              }
-            }
-            
-            const descriptionContainer = document.querySelector('#view-mode .mb-3:nth-child(3) .mt-2');
-            if (descriptionContainer) {
-              descriptionContainer.innerHTML = data.prompt.description.replace(/\n/g, '<br>');
-            }
-            
-            // 編集モードを閉じる
-            editMode.style.display = 'none';
-            viewMode.style.display = 'block';
+            document.getElementById('view-mode').style.display = 'block';
+            document.getElementById('edit-mode').style.display = 'none';
             toggleEditButton.textContent = '編集';
             
             // 成功メッセージを表示
-            const flashContainer = document.getElementById('flash-messages');
+            const flashContainer = document.getElementById('flash-container');
             if (flashContainer) {
               const existingAlerts = flashContainer.querySelectorAll('.alert');
               existingAlerts.forEach(alert => alert.remove());
@@ -353,7 +315,7 @@
           console.error('更新エラー:', error);
           
           // エラーメッセージを表示
-          const flashContainer = document.getElementById('flash-messages');
+          const flashContainer = document.getElementById('flash-container');
           if (flashContainer) {
             const existingAlerts = flashContainer.querySelectorAll('.alert');
             existingAlerts.forEach(alert => alert.remove());
