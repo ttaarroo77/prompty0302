@@ -8,11 +8,16 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "prompts#index"
   
-  resources :prompts do
+  # プロンプトのリソース定義
+  # edit アクションを除外（詳細ページで編集機能を提供）
+  resources :prompts, except: [:edit] do
     resources :tags, only: [:create, :destroy] do
       collection do
         get :suggest
       end
     end
   end
+  
+  # 古い編集URLへのアクセスを詳細ページにリダイレクト
+  get '/prompts/:id/edit', to: redirect('/prompts/%{id}')
 end

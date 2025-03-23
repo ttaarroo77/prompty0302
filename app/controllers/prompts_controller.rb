@@ -36,6 +36,8 @@ class PromptsController < ApplicationController
   end
 
   def edit
+    # 編集画面は不要なので詳細ページにリダイレクト
+    redirect_to @prompt
   end
 
   def create
@@ -51,9 +53,65 @@ class PromptsController < ApplicationController
 
   def update
     if @prompt.update(prompt_params)
-      redirect_to @prompt, notice: 'プロンプトが更新されました。'
+      respond_to do |format|
+        format.html {
+          redirect_to @prompt, notice: 'プロンプトが更新されました。'
+        }
+        format.json {
+          render json: {
+            success: true,
+            prompt: {
+              id: @prompt.id,
+              title: @prompt.title,
+              url: @prompt.url,
+              description: @prompt.description
+            },
+            message: 'プロンプトが更新されました。'
+          }
+        }
+        format.any {
+          if request.xhr?
+            render json: {
+              success: true,
+              prompt: {
+                id: @prompt.id,
+                title: @prompt.title,
+                url: @prompt.url,
+                description: @prompt.description
+              },
+              message: 'プロンプトが更新されました。'
+            }
+          else
+            redirect_to @prompt, notice: 'プロンプトが更新されました。'
+          end
+        }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      error_messages = @prompt.errors.full_messages.join(', ')
+      
+      respond_to do |format|
+        format.html {
+          render :show, status: :unprocessable_entity
+        }
+        format.json {
+          render json: {
+            success: false,
+            errors: @prompt.errors.full_messages,
+            message: "プロンプトの更新に失敗しました: #{error_messages}"
+          }, status: :unprocessable_entity
+        }
+        format.any {
+          if request.xhr?
+            render json: {
+              success: false,
+              errors: @prompt.errors.full_messages,
+              message: "プロンプトの更新に失敗しました: #{error_messages}"
+            }, status: :unprocessable_entity
+          else
+            render :show, status: :unprocessable_entity
+          end
+        }
+      end
     end
   end
 
