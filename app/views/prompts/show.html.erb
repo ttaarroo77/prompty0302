@@ -43,23 +43,6 @@
           <strong>説明:</strong>
           <div class="mt-2"><%= simple_format(@prompt.description) %></div>
         </div>
-        
-        <div>
-          <strong>タグ:</strong>
-          <div class="mt-2" id="prompt-tags">
-            <% if @prompt.tags.any? %>
-              <% @prompt.tags.each do |tag| %>
-                <div class="badge bg-secondary p-2 me-2 mb-2 d-inline-flex align-items-center">
-                  <%= tag.name %>
-                  <%= button_to prompt_tag_path(@prompt, tag), method: :delete, class: "ms-2 btn-close btn-close-white", style: "font-size: 0.5rem; background-size: 0.5rem;", form: { style: "display: inline;" } do %>
-                  <% end %>
-                </div>
-              <% end %>
-            <% else %>
-              <p>タグがありません</p>
-            <% end %>
-          </div>
-        </div>
       </div>
       
       <!-- 編集モード -->
@@ -221,30 +204,6 @@
           .then(data => {
             if (data.success) {
               console.log('タグ追加成功:', data);
-              
-              // 1. プロンプト詳細ページのタグリストを更新
-              const promptTagsContainer = document.getElementById('prompt-tags');
-              if (promptTagsContainer) {
-                const newTagElement = document.createElement('div');
-                newTagElement.className = 'badge bg-secondary p-2 me-2 mb-2 d-inline-flex align-items-center';
-                newTagElement.innerHTML = `
-                  ${tagName}
-                  <form action="/prompts/${data.prompt_id}/tags/${data.tag_id}" method="post" style="display: inline;">
-                    <input type="hidden" name="_method" value="delete">
-                    <input type="hidden" name="authenticity_token" value="${csrfToken}">
-                    <button type="submit" class="ms-2 btn-close btn-close-white" style="font-size: 0.5rem; background-size: 0.5rem;"></button>
-                  </form>
-                `;
-                
-                // 「タグがありません」メッセージがあれば削除
-                const noTagsMessage = promptTagsContainer.querySelector('p');
-                if (noTagsMessage && noTagsMessage.textContent === 'タグがありません') {
-                  noTagsMessage.remove();
-                }
-                
-                // 新しいタグを追加
-                promptTagsContainer.appendChild(newTagElement);
-              }
               
               // 2. サイドバーのタグリストも更新
               const sidebarTagsContainer = document.querySelector('.col-md-4 .card-body .mb-3:first-child');
