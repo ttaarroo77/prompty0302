@@ -19,26 +19,19 @@ class TagsController < ApplicationController
   end
 
   def suggest
-    Rails.logger.info "タグ提案開始: Prompt #{@prompt.id}"
+    Rails.logger.info "タグ提案処理を開始します: Prompt #{@prompt.id}"
     begin
       service = TagSuggestionService.new
       @suggested_tags = service.suggest_tags(@prompt)
       
-      Rails.logger.info "生成されたタグ名: #{@suggested_tags.map(&:name).join(', ')}"
+      Rails.logger.info "生成されたタグ名: #{@suggested_tags.map(&:name).inspect}"
       
-      respond_to do |format|
-        format.turbo_stream
-        format.html { render :suggest }
-      end
+      # Turbo Streamではなく、プロンプト詳細ページにリダイレクトしてフラッシュメッセージで結果を表示
+      redirect_to @prompt, notice: 'タグが提案されました。' and return
     rescue => e
       Rails.logger.error "タグ提案エラー: #{e.message}"
-      flash.now[:alert] = "タグの提案に失敗しました: #{e.message.include?('API key') ? 'APIキーが設定されていません' : e.message}"
-      @suggested_tags = []
-      
-      respond_to do |format|
-        format.turbo_stream
-        format.html { render :suggest }
-      end
+      error_message = e.message.include?('API key') ? 'APIキーが設定されていません' : e.message
+      redirect_to @prompt, alert: "タグの提案に失敗しました: #{error_message}" and return
     end
   end
 

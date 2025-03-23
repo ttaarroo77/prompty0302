@@ -90,7 +90,7 @@
           <h6>AIタグ提案:</h6>
           
           <div id="suggested-tags-container">
-            <%= turbo_frame_tag "suggested-tags" do %>
+            <div id="suggested-tags">
               <% if @suggested_tags.nil? || @suggested_tags.empty? %>
                 <div class="alert alert-light">
                   <p>AIにタグを提案してもらうボタンをクリックすると、ここにタグが表示されます。</p>
@@ -108,12 +108,11 @@
                   <% end %>
                 </div>
               <% end %>
-            <% end %>
+            </div>
           </div>
           
-          <%= link_to "AIにタグを提案してもらう", suggest_prompt_tags_path(@prompt), 
+          <%= link_to "AIにタグを提案してもらう", prompt_path(@prompt, suggested: true), 
               class: "btn btn-outline-primary w-100 mt-2", 
-              data: { turbo_frame: "suggested-tags" },
               id: "suggest-tags-button" %>
         </div>
       </div>

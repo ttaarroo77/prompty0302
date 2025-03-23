@@ -11,6 +11,17 @@ class PromptsController < ApplicationController
   def show
     @tag = Tag.new
     @suggested_tags = []
+    if params[:suggested] == 'true'
+      begin
+        service = TagSuggestionService.new
+        @suggested_tags = service.suggest_tags(@prompt)
+        Rails.logger.info "プロンプト詳細ページでタグ提案: #{@suggested_tags.map(&:name).inspect}"
+      rescue => e
+        Rails.logger.error "タグ提案エラー (詳細ページ): #{e.message}"
+        flash.now[:alert] = "タグの提案に失敗しました: #{e.message.include?('API key') ? 'APIキーが設定されていません' : e.message}"
+        @suggested_tags = []
+      end
+    end
   end
 
   def edit
