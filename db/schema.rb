@@ -52,14 +52,24 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_24_034502) do
     t.index ["user_id"], name: "index_prompts_on_user_id"
   end
 
+  create_table "prompts_tags", id: false, force: :cascade do |t|
+    t.bigint "prompt_id"
+    t.bigint "tag_id"
+    t.index ["prompt_id", "tag_id"], name: "index_prompts_tags_on_prompt_id_and_tag_id", unique: true
+    t.index ["prompt_id"], name: "index_prompts_tags_on_prompt_id"
+    t.index ["tag_id"], name: "index_prompts_tags_on_tag_id"
+  end
+
   create_table "tags", force: :cascade do |t|
     t.bigint "prompt_id"
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["name"], name: "index_tags_on_name", unique: true, where: "(prompt_id IS NULL)"
     t.index ["prompt_id", "name"], name: "index_tags_on_prompt_id_and_name", unique: true, where: "(prompt_id IS NOT NULL)"
     t.index ["prompt_id"], name: "index_tags_on_prompt_id"
+    t.index ["user_id"], name: "index_tags_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|

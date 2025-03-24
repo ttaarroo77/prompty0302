@@ -142,6 +142,12 @@
             <%= f.text_area :description, rows: 5, class: "form-control" %>
           </div>
           
+          <div class="mb-3">
+            <%= f.label :attachment, "ファイル", class: "form-label" %>
+            <%= f.file_field :attachment, class: "form-control" %>
+            <div class="form-text">ファイルサイズは最大5MBまで</div>
+          </div>
+          
           <%= f.submit "追加する", class: "btn btn-dark w-100" %>
         <% end %>
       </div>

@@ -1,103 +1,55 @@
 class TagsController < ApplicationController
-  before_action :set_prompt
+  before_action :authenticate_user!
+  before_action :set_prompt, only: [:create, :destroy]
   skip_before_action :verify_authenticity_token, only: [:create], if: -> { request.format.json? || request.xhr? }
 
   def create
-    @tag = @prompt.tags.build(tag_params)
+    tag_name = tag_params[:name].strip
     
-    if @tag.save
-      # タグ提案を保持するためのセッション変数を確認
-      session[:suggested_tag_ids] ||= []
+    if tag_name.present?
+      # 既存のタグを検索または新規作成
+      @tag = Tag.find_or_initialize_by(name: tag_name)
       
-      respond_to do |format|
-        format.html {
-          # HTMLリクエストの場合は通常のリダイレクト
-          redirect_to prompt_path(@prompt, suggested_tag_ids: session[:suggested_tag_ids]), notice: 'タグが追加されました。'
-        }
-        format.json {
-          # JSONリクエストの場合は成功レスポンスを返す
-          render json: { 
-            success: true, 
-            tag_id: @tag.id, 
-            tag_name: @tag.name,
-            prompt_id: @prompt.id,
-            message: 'タグが追加されました。'
-          }
-        }
-        format.any {
-          # AjaxリクエストなどJSONでもHTMLでもない場合
-          if request.xhr?
-            render json: { 
-              success: true, 
-              tag_id: @tag.id, 
-              tag_name: @tag.name,
-              prompt_id: @prompt.id,
-              message: 'タグが追加されました。'
-            }
-          else
-            redirect_to prompt_path(@prompt, suggested_tag_ids: session[:suggested_tag_ids]), notice: 'タグが追加されました。'
-          end
-        }
+      if @tag.new_record?
+        @tag.user = current_user
+        @tag.save
+      end
+      
+      # プロンプトにタグを関連付け
+      unless @prompt.tags.include?(@tag)
+        @prompt.tags << @tag
+        flash[:notice] = "タグ「#{tag_name}」を追加しました。"
+      else
+        flash[:alert] = "タグ「#{tag_name}」は既に追加されています。"
       end
     else
-      error_messages = @tag.errors.full_messages.join(', ')
-      Rails.logger.error "タグ作成エラー: #{error_messages}"
-      
-      respond_to do |format|
-        format.html {
-          redirect_to @prompt, alert: "タグの追加に失敗しました。#{error_messages}"
-        }
-        format.json {
-          render json: { 
-            success: false, 
-            errors: @tag.errors.full_messages,
-            error_details: @tag.errors.details,
-            message: 'タグの追加に失敗しました。'
-          }, status: :unprocessable_entity
-        }
-        format.any {
-          if request.xhr?
-            render json: { 
-              success: false, 
-              errors: @tag.errors.full_messages,
-              message: 'タグの追加に失敗しました。'
-            }, status: :unprocessable_entity
-          else
-            redirect_to @prompt, alert: "タグの追加に失敗しました。#{error_messages}"
-          end
-        }
-      end
+      flash[:alert] = "タグ名を入力してください。"
     end
+    
+    # 提案タグのIDがある場合は保持
+    tag_ids = []
+    if params[:suggested_tag_ids].present?
+      tag_ids = params[:suggested_tag_ids].is_a?(Array) ? params[:suggested_tag_ids] : params[:suggested_tag_ids].split(',')
+    end
+    
+    redirect_to prompt_path(@prompt, suggested_tag_ids: tag_ids)
   end
 
   def destroy
-    @tag = @prompt.tags.find(params[:id])
-    @tag.destroy
+    @tag = Tag.find(params[:id])
     
-    # タグ提案を保持するためのセッション変数を確認
-    session[:suggested_tag_ids] ||= []
+    # タグとプロンプトの関連付けを解除
+    @prompt.tags.delete(@tag)
     
-    respond_to do |format|
-      format.html {
-        redirect_to prompt_path(@prompt, suggested_tag_ids: session[:suggested_tag_ids]), notice: 'タグが削除されました。'
-      }
-      format.json {
-        render json: { 
-          success: true, 
-          message: 'タグが削除されました。'
-        }
-      }
-      format.any {
-        if request.xhr?
-          render json: { 
-            success: true, 
-            message: 'タグが削除されました。'
-          }
-        else
-          redirect_to prompt_path(@prompt, suggested_tag_ids: session[:suggested_tag_ids]), notice: 'タグが削除されました。'
-        end
-      }
+    flash[:notice] = "タグ「#{@tag.name}」を削除しました。"
+    
+    # 提案タグのIDがある場合は保持
+    tag_ids = []
+    if params[:suggested_tag_ids].present?
+      tag_ids = params[:suggested_tag_ids].is_a?(Array) ? params[:suggested_tag_ids] : params[:suggested_tag_ids].split(',')
     end
+    
+    redirect_to prompt_path(@prompt, suggested_tag_ids: tag_ids)
   end
 
   def suggest
@@ -125,6 +77,11 @@ class TagsController < ApplicationController
 
   def set_prompt
     @prompt = Prompt.find(params[:prompt_id])
+    # 他のユーザーのプロンプトへのアクセスを防止
+    unless @prompt.user_id == current_user.id
+      flash[:alert] = "アクセス権限がありません。"
+      redirect_to prompts_path
+    end
   end
 
   def tag_params
