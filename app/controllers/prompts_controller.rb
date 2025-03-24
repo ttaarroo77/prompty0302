@@ -8,8 +8,9 @@ class PromptsController < ApplicationController
     # 検索機能の追加
     if params[:search].present?
       search_term = "%#{params[:search]}%"
-      @prompts = @prompts.where("title ILIKE ? OR description ILIKE ?", search_term, search_term)
-        .or(Prompt.joins(:tags).where("tags.name ILIKE ?", search_term))
+      @prompts = @prompts.left_joins(:tags)
+        .where("prompts.title ILIKE ? OR prompts.description ILIKE ? OR tags.name ILIKE ?", 
+               search_term, search_term, search_term)
         .distinct
     end
     
