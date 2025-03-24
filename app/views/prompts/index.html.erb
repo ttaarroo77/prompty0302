@@ -82,11 +82,13 @@
                         <%= tag.name %>
                       <% end %>
                     <% end %>
-                    <% if prompt.attachment.attached? %>
-                      <span class="badge bg-light text-dark">
-                        <i class="bi bi-paperclip"></i>
-                      </span>
-                    <% end %>
+
+                    
+
+
+
+
+
                   </div>
                   <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
                 </div>
@@ -140,12 +142,16 @@
             <%= f.label :description, "説明", class: "form-label" %>
             <%= f.text_area :description, rows: 5, class: "form-control" %>
           </div>
+
+
+
+
+
+
+
           
-          <div class="mb-3">
-            <%= f.label :attachment, "ファイル", class: "form-label" %>
-            <%= f.file_field :attachment, class: "form-control" %>
-            <div class="form-text">ファイルサイズは最大5MBまで</div>
-          </div>
+
+
           
           <%= f.submit "追加する", class: "btn btn-dark w-100" %>
         <% end %>

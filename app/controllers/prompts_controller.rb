@@ -6,7 +6,6 @@ class PromptsController < ApplicationController
     @prompt = Prompt.new
     @prompts = Prompt.where(user_id: current_user.id)
                     .includes(:tags)  # タグを事前に読み込み
-                    .with_attached_attachment  # 添付ファイルを事前に読み込み
     
     # 検索機能の追加
     if params[:search].present?
@@ -94,10 +93,7 @@ class PromptsController < ApplicationController
 
   def update
     respond_to do |format|
-      # 添付ファイルの削除チェックを処理
-      if params[:remove_attachment] == "1" && @prompt.attachment.attached?
-        @prompt.attachment.purge
-      end
+
       
       if @prompt.update(prompt_params)
         format.html { redirect_to prompt_path(@prompt), notice: "プロンプトが更新されました。" }
@@ -127,6 +123,7 @@ class PromptsController < ApplicationController
   end
 
   def prompt_params
-    params.require(:prompt).permit(:title, :description, :url, :attachment)
+    params.require(:prompt).permit(:title, :description, :url)
+    # params.require(:prompt).permit(:title, :description, :url, :attachment)
   end
 end
