@@ -98,6 +98,20 @@ class PromptsController < ApplicationController
     @prompt = Prompt.find(params[:id])
     # 一時的にタグ提案を無効化
     @suggested_tags = []
+    
+    # attachment関連のエラーを回避するための安全策
+    # デバッグモードで詳細情報をログに出力
+    Rails.logger.debug "Prompt ID: #{@prompt.id}, Title: #{@prompt.title}"
+    Rails.logger.debug "User: #{@prompt.user.email}" if @prompt.user.present?
+    
+    if @prompt.attachment.attached?
+      Rails.logger.debug "Attachment attached: #{@prompt.attachment.filename}"
+    else
+      Rails.logger.debug "No attachment found for this prompt"
+    end
+  rescue => e
+    Rails.logger.error "Error in show action: #{e.message}"
+    redirect_to prompts_path, alert: "プロンプトの表示中にエラーが発生しました。"
   end
 
   def edit

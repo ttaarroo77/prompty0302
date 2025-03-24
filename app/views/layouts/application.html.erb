@@ -6,6 +6,31 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <% # aria-hiddenを防止するためのスタイルとスクリプト %>
+    <style>
+      body[aria-hidden="true"] {
+        aria-hidden: false !important;
+      }
+    </style>
+    <script>
+      // ページ読み込み開始時点でaria-hidden属性を防止するための即時実行関数
+      (function() {
+        // aria-hidden属性のセッターを上書き
+        Object.defineProperty(Element.prototype, 'ariaHidden', {
+          set: function(val) {
+            if (this.tagName === 'BODY') {
+              console.warn('aria-hidden="true" on body is not allowed');
+              return;
+            }
+            this.setAttribute('aria-hidden', val);
+          },
+          get: function() {
+            return this.getAttribute('aria-hidden');
+          }
+        });
+      })();
+    </script>
+
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -67,35 +92,41 @@
           });
         });
         
-        // aria-hidden属性を安全に処理 - より強力なバージョン
-        function removeAriaHidden() {
+        // 即時に実行する
+        (function removeBodyAriaHidden() {
+          // bodyからaria-hidden属性を強制的に削除
           document.body.removeAttribute('aria-hidden');
           
-          // data-theme属性やclass属性が設定されていても、aria-hiddenを削除
-          if (document.body.getAttribute('aria-hidden') === 'true') {
-            Object.defineProperty(document.body, 'ariaHidden', {
-              get: function() { return null; },
-              set: function(val) { /* 何もしない */ },
-              configurable: true
-            });
-          }
-        }
-        
-        // 初期実行
-        removeAriaHidden();
-        
-        // 定期的に実行（100ms間隔）
-        setInterval(removeAriaHidden, 100);
-        
-        // MutationObserverでも監視
-        const observer = new MutationObserver(function(mutations) {
-          removeAriaHidden();
-        });
-        
-        observer.observe(document.body, { 
-          attributes: true, 
-          attributeFilter: ['aria-hidden', 'data-theme', 'class'] 
-        });
+          // aria-hidden属性の設定を監視して防止
+          const bodyEl = document.body;
+          const origSetAttr = bodyEl.setAttribute;
+          bodyEl.setAttribute = function(name, value) {
+            if (name === 'aria-hidden') {
+              console.warn('Preventing aria-hidden on body');
+              return;
+            }
+            return origSetAttr.call(this, name, value);
+          };
+          
+          // MutationObserverで継続的に監視
+          const observer = new MutationObserver(function() {
+            if (document.body.hasAttribute('aria-hidden')) {
+              document.body.removeAttribute('aria-hidden');
+            }
+          });
+          
+          observer.observe(document.body, { 
+            attributes: true, 
+            attributeFilter: ['aria-hidden']
+          });
+          
+          // 100ms間隔で定期的にチェック
+          setInterval(function() {
+            if (document.body.hasAttribute('aria-hidden')) {
+              document.body.removeAttribute('aria-hidden');
+            }
+          }, 100);
+        })();
       });
     </script>
   </body>
