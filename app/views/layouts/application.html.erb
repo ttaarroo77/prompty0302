@@ -67,20 +67,34 @@
           });
         });
         
-        // aria-hidden属性を安全に処理
-        // bodyにaria-hiddenが適用されないようにする
-        document.querySelector('body').removeAttribute('aria-hidden');
-        
-        // ページ読み込み後と動的コンテンツ変更時にもaria-hidden="true"を監視して削除
-        const observer = new MutationObserver(function(mutations) {
+        // aria-hidden属性を安全に処理 - より強力なバージョン
+        function removeAriaHidden() {
+          document.body.removeAttribute('aria-hidden');
+          
+          // data-theme属性やclass属性が設定されていても、aria-hiddenを削除
           if (document.body.getAttribute('aria-hidden') === 'true') {
-            document.body.removeAttribute('aria-hidden');
+            Object.defineProperty(document.body, 'ariaHidden', {
+              get: function() { return null; },
+              set: function(val) { /* 何もしない */ },
+              configurable: true
+            });
           }
+        }
+        
+        // 初期実行
+        removeAriaHidden();
+        
+        // 定期的に実行（100ms間隔）
+        setInterval(removeAriaHidden, 100);
+        
+        // MutationObserverでも監視
+        const observer = new MutationObserver(function(mutations) {
+          removeAriaHidden();
         });
         
         observer.observe(document.body, { 
           attributes: true, 
-          attributeFilter: ['aria-hidden'] 
+          attributeFilter: ['aria-hidden', 'data-theme', 'class'] 
         });
       });
     </script>
