@@ -7,11 +7,19 @@ class PromptsController < ApplicationController
     
     # 検索機能の追加
     if params[:search].present?
-      search_term = "%#{params[:search]}%"
+      search_term = "%#{params[:search].downcase}%"
       @prompts = @prompts.left_joins(:tags)
-        .where("prompts.title ILIKE ? OR prompts.description ILIKE ? OR tags.name ILIKE ?", 
-               search_term, search_term, search_term)
-        .distinct
+      
+      # データベースアダプタに応じて適切な検索メソッドを使用
+      if ActiveRecord::Base.connection.adapter_name.downcase == 'postgresql'
+        @prompts = @prompts.where("prompts.title ILIKE ? OR prompts.description ILIKE ? OR tags.name ILIKE ?", 
+                                 search_term, search_term, search_term)
+      else
+        @prompts = @prompts.where("LOWER(prompts.title) LIKE ? OR LOWER(prompts.description) LIKE ? OR LOWER(tags.name) LIKE ?", 
+                                 search_term, search_term, search_term)
+      end
+      
+      @prompts = @prompts.distinct
     end
     
     # タグによるフィルタリング
