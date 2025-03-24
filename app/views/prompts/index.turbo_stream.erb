@@ -1,0 +1,41 @@
+<%= turbo_stream.update "search-results" do %>
+  <% if @prompts.any? %>
+    <div class="row">
+      <% @prompts.each do |prompt| %>
+        <div class="col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title"><%= prompt.title %></h5>
+              <% if prompt.url.present? %>
+                <p class="card-text small text-truncate">
+                  <i class="bi bi-link-45deg"></i>
+                  <%= link_to prompt.url, prompt.url, target: "_blank", class: "text-muted text-decoration-none text-break" %>
+                </p>
+              <% end %>
+              <p class="card-text text-truncate"><%= prompt.description %></p>
+              <div class="mb-2">
+                <% prompt.tags.each do |tag| %>
+                  <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
+                    <%= tag.name %>
+                  <% end %>
+                <% end %>
+              </div>
+              <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="alert alert-light">
+      <% if params[:search].present? %>
+        <p class="mb-0 d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle"></i>
+          <span>「<%= params[:search] %>」に一致するプロンプトが見つかりませんでした。</span>
+        </p>
+      <% else %>
+        <p class="mb-0">プロンプトがまだありません。新しいプロンプトを追加してください。</p>
+      <% end %>
+    </div>
+  <% end %>
+<% end %> 

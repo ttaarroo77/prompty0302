@@ -5,6 +5,14 @@ class PromptsController < ApplicationController
     @prompt = Prompt.new
     @prompts = Prompt.all
     
+    # 検索機能の追加
+    if params[:search].present?
+      search_term = "%#{params[:search]}%"
+      @prompts = @prompts.where("title ILIKE ? OR description ILIKE ?", search_term, search_term)
+        .or(Prompt.joins(:tags).where("tags.name ILIKE ?", search_term))
+        .distinct
+    end
+    
     # タグによるフィルタリング
     if params[:tag].present?
       @prompts = @prompts.joins(:tags).where(tags: { name: params[:tag] })
@@ -24,17 +32,15 @@ class PromptsController < ApplicationController
       @prompts = @prompts.order(created_at: :desc) # デフォルトは作成日時の降順
     end
 
-    # すべてのプロンプトから使用されているタグ名を取得
-    used_tag_names = Tag.where.not(prompt_id: nil).pluck(:name).uniq
-    
-    # スタンドアロンタグを取得
-    @standalone_tags = Tag.where(prompt_id: nil).order(:name)
-    
-    # プロンプトと紐づいたタグも「既存タグ」として表示するため、両方のタグを結合
-    @all_tag_names = (used_tag_names + @standalone_tags.pluck(:name)).uniq.sort
-    
-    # タグの使用回数を計算
+    # タグ関連の処理
+    @all_tag_names = Tag.pluck(:name).uniq
     @tag_counts = Tag.group(:name).count
+
+    # Turbo Streamsのリクエストに対応
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   def show

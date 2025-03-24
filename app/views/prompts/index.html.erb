@@ -3,6 +3,31 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2">プロンプト一覧</h1>
       <div class="d-flex align-items-center gap-3">
+        <!-- 検索フォーム -->
+        <div class="position-relative" style="min-width: 250px;">
+          <%= form_with(url: prompts_path, method: :get, data: { controller: "search", turbo_frame: "search-results" }) do |f| %>
+            <%= f.hidden_field :sort, value: params[:sort] if params[:sort].present? %>
+            <%= f.hidden_field :tag, value: params[:tag] if params[:tag].present? %>
+            <div class="input-group">
+              <%= f.search_field :search, 
+                  class: "form-control",
+                  placeholder: "タイトル、説明、タグで検索...",
+                  value: params[:search],
+                  data: { 
+                    action: "input->search#search",
+                    search_target: "input"
+                  } %>
+              <% if params[:search].present? %>
+                <%= link_to prompts_path(sort: params[:sort], tag: params[:tag]), 
+                    class: "btn btn-outline-secondary",
+                    title: "検索をクリア" do %>
+                  <i class="bi bi-x"></i>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
         <!-- ソートオプション -->
         <div class="dropdown">
           <button class="btn btn-outline-dark dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -35,35 +60,46 @@
       </div>
     </div>
     
-    <% if @prompts.any? %>
-      <div class="row">
-        <% @prompts.each do |prompt| %>
-          <div class="col-md-6 mb-4">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title"><%= prompt.title %></h5>
-                <% if prompt.url.present? %>
-                  <p class="card-text small text-truncate">
-                    <i class="bi bi-link-45deg"></i>
-                    <%= link_to prompt.url, prompt.url, target: "_blank", class: "text-muted text-decoration-none text-break" %>
-                  </p>
-                <% end %>
-                <p class="card-text text-truncate"><%= prompt.description %></p>
-                <div class="mb-2">
-                  <% prompt.tags.each do |tag| %>
-                    <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
-                      <%= tag.name %>
-                    <% end %>
+    <%= turbo_frame_tag "search-results" do %>
+      <% if @prompts.any? %>
+        <div class="row">
+          <% @prompts.each do |prompt| %>
+            <div class="col-md-6 mb-4">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title"><%= prompt.title %></h5>
+                  <% if prompt.url.present? %>
+                    <p class="card-text small text-truncate">
+                      <i class="bi bi-link-45deg"></i>
+                      <%= link_to prompt.url, prompt.url, target: "_blank", class: "text-muted text-decoration-none text-break" %>
+                    </p>
                   <% end %>
+                  <p class="card-text text-truncate"><%= prompt.description %></p>
+                  <div class="mb-2">
+                    <% prompt.tags.each do |tag| %>
+                      <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
+                        <%= tag.name %>
+                      <% end %>
+                    <% end %>
+                  </div>
+                  <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
                 </div>
-                <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
               </div>
             </div>
-          </div>
-        <% end %>
-      </div>
-    <% else %>
-      <p>プロンプトがまだありません。新しいプロンプトを追加してください。</p>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="alert alert-light">
+          <% if params[:search].present? %>
+            <p class="mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-info-circle"></i>
+              <span>「<%= params[:search] %>」に一致するプロンプトが見つかりませんでした。</span>
+            </p>
+          <% else %>
+            <p class="mb-0">プロンプトがまだありません。新しいプロンプトを追加してください。</p>
+          <% end %>
+        </div>
+      <% end %>
     <% end %>
   </div>
   
