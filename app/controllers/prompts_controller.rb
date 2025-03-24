@@ -2,17 +2,28 @@ class PromptsController < ApplicationController
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
 
   def index
-    @prompts = if params[:tag].present?
-      tag_name = params[:tag]
-      # タグ名で検索する場合は、タグを持つプロンプトを検索
-      prompt_ids = Tag.where(name: tag_name).pluck(:prompt_id).compact
-      Prompt.where(id: prompt_ids).order(created_at: :desc)
-    else
-      Prompt.all.order(created_at: :desc)
-    end
-    
     @prompt = Prompt.new
+    @prompts = Prompt.all
     
+    # タグによるフィルタリング
+    if params[:tag].present?
+      @prompts = @prompts.joins(:tags).where(tags: { name: params[:tag] })
+    end
+
+    # ソート機能の追加
+    case params[:sort]
+    when 'title_asc'
+      @prompts = @prompts.order(title: :asc)
+    when 'title_desc'
+      @prompts = @prompts.order(title: :desc)
+    when 'created_asc'
+      @prompts = @prompts.order(created_at: :asc)
+    when 'created_desc'
+      @prompts = @prompts.order(created_at: :desc)
+    else
+      @prompts = @prompts.order(created_at: :desc) # デフォルトは作成日時の降順
+    end
+
     # すべてのプロンプトから使用されているタグ名を取得
     used_tag_names = Tag.where.not(prompt_id: nil).pluck(:name).uniq
     
@@ -23,10 +34,7 @@ class PromptsController < ApplicationController
     @all_tag_names = (used_tag_names + @standalone_tags.pluck(:name)).uniq.sort
     
     # タグの使用回数を計算
-    @tag_counts = {}
-    @all_tag_names.each do |tag_name|
-      @tag_counts[tag_name] = Tag.where(name: tag_name).where.not(prompt_id: nil).count
-    end
+    @tag_counts = Tag.group(:name).count
   end
 
   def show

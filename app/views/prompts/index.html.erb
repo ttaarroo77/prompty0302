@@ -2,15 +2,37 @@
   <div class="col-md-8">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2">プロンプト一覧</h1>
-      <% if params[:tag].present? %>
-        <div class="d-flex align-items-center">
-          <span class="me-2">フィルター:</span>
-          <span class="badge bg-dark me-2"><%= params[:tag] %></span>
-          <%= link_to prompts_path, class: "btn btn-sm btn-outline-secondary" do %>
-            <i class="bi bi-x"></i> クリア
-          <% end %>
+      <div class="d-flex align-items-center gap-3">
+        <!-- ソートオプション -->
+        <div class="dropdown">
+          <button class="btn btn-outline-dark dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <%= case params[:sort]
+              when 'title_asc' then 'タイトル（昇順）'
+              when 'title_desc' then 'タイトル（降順）'
+              when 'created_asc' then '作成日時（古い順）'
+              when 'created_desc' then '作成日時（新しい順）'
+              else '作成日時（新しい順）'
+              end %>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+            <li><%= link_to 'タイトル（昇順）', prompts_path(sort: 'title_asc', tag: params[:tag]), class: "dropdown-item #{'active' if params[:sort] == 'title_asc'}" %></li>
+            <li><%= link_to 'タイトル（降順）', prompts_path(sort: 'title_desc', tag: params[:tag]), class: "dropdown-item #{'active' if params[:sort] == 'title_desc'}" %></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><%= link_to '作成日時（新しい順）', prompts_path(sort: 'created_desc', tag: params[:tag]), class: "dropdown-item #{'active' if params[:sort] == 'created_desc' || params[:sort].nil?}" %></li>
+            <li><%= link_to '作成日時（古い順）', prompts_path(sort: 'created_asc', tag: params[:tag]), class: "dropdown-item #{'active' if params[:sort] == 'created_asc'}" %></li>
+          </ul>
         </div>
-      <% end %>
+
+        <% if params[:tag].present? %>
+          <div class="d-flex align-items-center">
+            <span class="me-2">フィルター:</span>
+            <span class="badge bg-dark me-2"><%= params[:tag] %></span>
+            <%= link_to prompts_path(sort: params[:sort]), class: "btn btn-sm btn-outline-secondary" do %>
+              <i class="bi bi-x"></i> クリア
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
     
     <% if @prompts.any? %>
