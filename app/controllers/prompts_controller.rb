@@ -98,76 +98,32 @@ class PromptsController < ApplicationController
 
   def create
     @prompt = Prompt.new(prompt_params)
-    @prompt.user_id = current_user.id
+    @prompt.user = current_user
 
-    if @prompt.save
-      redirect_to @prompt, notice: 'プロンプトが作成されました。'
-    else
-      @prompts = Prompt.where(user_id: current_user.id)
-      render :index, status: :unprocessable_entity
+    respond_to do |format|
+      if @prompt.save
+        format.html { redirect_to prompts_path, notice: "プロンプトが作成されました。" }
+        format.json { render :show, status: :created, location: @prompt }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @prompt.errors, status: :unprocessable_entity }
+      end
     end
   end
 
   def update
-    if @prompt.update(prompt_params)
-      respond_to do |format|
-        format.html {
-          redirect_to @prompt, notice: 'プロンプトが更新されました。'
-        }
-        format.json {
-          render json: {
-            success: true,
-            prompt: {
-              id: @prompt.id,
-              title: @prompt.title,
-              url: @prompt.url,
-              description: @prompt.description
-            },
-            message: 'プロンプトが更新されました。'
-          }
-        }
-        format.any {
-          if request.xhr?
-            render json: {
-              success: true,
-              prompt: {
-                id: @prompt.id,
-                title: @prompt.title,
-                url: @prompt.url,
-                description: @prompt.description
-              },
-              message: 'プロンプトが更新されました。'
-            }
-          else
-            redirect_to @prompt, notice: 'プロンプトが更新されました。'
-          end
-        }
+    respond_to do |format|
+      # 添付ファイルの削除チェックを処理
+      if params[:remove_attachment] == "1" && @prompt.attachment.attached?
+        @prompt.attachment.purge
       end
-    else
-      error_messages = @prompt.errors.full_messages.join(', ')
       
-      respond_to do |format|
-        format.html {
-          render :show, status: :unprocessable_entity
-        }
-        format.json {
-          render json: {
-            success: false,
-            errors: @prompt.errors.full_messages,
-            message: "プロンプトの更新に失敗しました: #{error_messages}"
-          }, status: :unprocessable_entity
-        }
-        format.any {
-          if request.xhr?
-            render json: {
-              success: false,
-              errors: @prompt.errors.full_messages,
-              message: "プロンプトの更新に失敗しました: #{error_messages}"
-            }, status: :unprocessable_entity
-          else
-            render :show, status: :unprocessable_entity
-          end
-        }
+      if @prompt.update(prompt_params)
+        format.html { redirect_to prompt_path(@prompt), notice: "プロンプトが更新されました。" }
+        format.json { render :show, status: :ok, location: @prompt }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @prompt.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -190,6 +146,6 @@ class PromptsController < ApplicationController
   end
 
   def prompt_params
-    params.require(:prompt).permit(:title, :url, :description)
+    params.require(:prompt).permit(:title, :description, :url, :attachment)
   end
 end

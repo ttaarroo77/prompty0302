@@ -48,7 +48,8 @@
           </ul>
         </div>
 
-        <% if params[:tag].present? %>
+        <%# タグフィルター表示部分をコメントアウト %>
+        <% if false && params[:tag].present? %>
           <div class="d-flex align-items-center">
             <span class="me-2">フィルター:</span>
             <span class="badge bg-dark me-2"><%= params[:tag] %></span>
@@ -80,6 +81,12 @@
                       <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
                         <%= tag.name %>
                       <% end %>
+                    <% end %>
+                    <% if prompt.attachment.attached? %>
+                      <span class="badge bg-light text-dark">
+                        <i class="bi bi-paperclip"></i>
+                        添付ファイル
+                      </span>
                     <% end %>
                   </div>
                   <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
