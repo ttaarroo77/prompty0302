@@ -55,8 +55,15 @@ class PromptsController < ApplicationController
     # # 表示用のタグリスト（ユーザーが使用しているタグのみ）
     # @all_tags_for_display = @user_tags.keys
     
-    # # タグの総数
-    @total_tag_count = @user_tags.keys.size
+
+    
+    # # タグの総数 / # タグ機能を無効化しているので、デフォルト値を設定
+    # @total_tag_count = @user_tags.keys.size
+    @user_tags = {}
+    @all_tags_for_display = []
+    @total_tag_count = 0  # 直接0を設定
+
+
 
     # Turbo Streamsのリクエストに対応
     respond_to do |format|
