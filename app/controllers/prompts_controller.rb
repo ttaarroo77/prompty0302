@@ -5,6 +5,8 @@ class PromptsController < ApplicationController
   def index
     @prompt = Prompt.new
     @prompts = Prompt.where(user_id: current_user.id)
+                    .includes(:tags)  # タグを事前に読み込み
+                    .with_attached_attachment  # 添付ファイルを事前に読み込み
     
     # 検索機能の追加
     if params[:search].present?
