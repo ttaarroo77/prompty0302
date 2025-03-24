@@ -12,17 +12,21 @@ class OpenaiClient
     raise "OpenAI gemがインストールされていません。'bundle add openai'を実行してインストールしてください。"
   end
 
-  def generate_tag_suggestions(prompt, existing_tags)
+  def generate_tag_suggestions(prompt, existing_tags, user_tags = [])
     # プロンプトの内容を取得
     title = prompt.title.to_s
     description = prompt.description.to_s
     url = prompt.url.to_s
     current_tags = prompt.tags.pluck(:name).join(", ")
     
+    # ユーザーが既に使用しているタグを優先
+    prioritized_tags = user_tags.empty? ? "" : "【優先タグ（ユーザーが既に使用）】\n#{user_tags.join(", ")}\n\n"
+    
     # APIリクエスト用のプロンプトを作成
     prompt_text = <<~PROMPT
       以下のプロンプト内容に最も関連する既存タグを5つ選んでください。
-      必ず以下の「利用可能なタグ一覧」から選択し、新しいタグは作成しないでください。
+      【重要】必ず以下の「利用可能なタグ一覧」から選択し、新しいタグは絶対に作成しないでください。
+      可能な限り「優先タグ」から選択し、それが適切でない場合のみ他のタグを選んでください。
       
       【プロンプト情報】
       タイトル: #{title}
@@ -30,14 +34,16 @@ class OpenaiClient
       #{"URL: #{url}" if url.present?}
       #{"現在のタグ: #{current_tags}" if current_tags.present?}
       
-      【利用可能なタグ一覧】
+      #{prioritized_tags}【利用可能なタグ一覧】
       #{existing_tags.join(", ")}
       
       【レスポンス形式】
-      - 必ず「利用可能なタグ一覧」に含まれるタグのみを選択してください
+      - 「利用可能なタグ一覧」に含まれるタグのみを選択してください
+      - 可能な限り「優先タグ」から選びます
       - カンマ区切りで出力してください
       - 数字や記号を追加しないでください
       - 新しいタグを作成しないでください
+      - 利用可能なタグにないものは絶対に提案しないでください
       
       レスポンス:
     PROMPT
@@ -51,14 +57,14 @@ class OpenaiClient
           messages: [
             { 
               role: "system", 
-              content: "あなたは既存タグの中から最適なものを選ぶアシスタントです。新しいタグは絶対に作成せず、与えられたタグリストの中からのみ選択してください。"
+              content: "あなたは既存タグの中から最適なものを選ぶアシスタントです。新しいタグは絶対に作成せず、与えられたタグリストの中からのみ選択してください。ユーザーが既に使用しているタグを優先して選択してください。"
             },
             { 
               role: "user", 
               content: prompt_text 
             }
           ],
-          temperature: 0.3, # より決定論的な結果を得るために温度を下げる
+          temperature: 0.2, # より決定論的な結果を得るために温度を下げる
           max_tokens: 150
         }
       )

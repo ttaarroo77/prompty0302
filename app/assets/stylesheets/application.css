@@ -8,3 +8,26 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+/* カスタムスタイル */
+.navbar-brand {
+  text-align: left !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.navbar .content-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-brand {
+    margin-left: 0 !important;
+  }
+}
+
+.h2 {
+  padding-left: 0 !important;
+}

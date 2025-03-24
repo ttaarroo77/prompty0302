@@ -1,0 +1,68 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      
+      <div class="card shadow mb-4">
+        <div class="card-body p-4">
+          <h2 class="card-title mb-4">プロフィール編集</h2>
+
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+            <%= render "devise/shared/error_messages", resource: resource %>
+
+            <div class="mb-3">
+              <%= f.label :name, "名前", class: "form-label" %>
+              <%= f.text_field :name, autofocus: true, class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :email, "メールアドレス", class: "form-label" %>
+              <%= f.email_field :email, autocomplete: "email", class: "form-control" %>
+            </div>
+
+            <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+              <div class="alert alert-info">
+                <%= resource.unconfirmed_email %> の確認待ちです
+              </div>
+            <% end %>
+
+            <h4 class="mt-4 mb-3">新しいパスワード <small class="text-muted">（変更する場合のみ）</small></h4>
+            
+            <div class="mb-3">
+              <%= f.label :password, "新しいパスワード", class: "form-label" %>
+              <% if @minimum_password_length %>
+              <small class="text-muted">（<%= @minimum_password_length %> 文字以上）</small>
+              <% end %>
+              <%= f.password_field :password, autocomplete: "new-password", class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :password_confirmation, "パスワードの確認", class: "form-label" %>
+              <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+            </div>
+
+            <div class="mb-4">
+              <%= f.label :current_password, "現在のパスワード", class: "form-label" %>
+              <small class="text-muted">（変更を確認するために現在のパスワードが必要です）</small>
+              <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control" %>
+            </div>
+
+            <div class="d-grid gap-2">
+              <%= f.submit "プロフィールを更新", class: "btn btn-dark" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card shadow">
+        <div class="card-body p-4">
+          <h3 class="card-title text-danger">アカウント削除</h3>
+          <p>アカウントを削除すると、すべてのデータが完全に削除されます。この操作は元に戻せません。</p>
+          <%= button_to "アカウントを削除", registration_path(resource_name), 
+                        data: { turbo_confirm: "本当に削除しますか？この操作は元に戻せません。" }, 
+                        method: :delete, 
+                        class: "btn btn-outline-danger" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

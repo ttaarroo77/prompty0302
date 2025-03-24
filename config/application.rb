@@ -9,6 +9,9 @@ Bundler.require(*Rails.groups)
 # dotenvを読み込む
 Dotenv::Rails.load if defined?(Dotenv)
 
+# Explicitly require Devise
+require 'devise'
+
 module PromptyNew
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -28,6 +31,6 @@ module PromptyNew
     # config.eager_load_paths << Rails.root.join("extras")
 
     config.time_zone = 'Tokyo'
-    # config.i18n.default_locale = :ja
+    config.i18n.default_locale = :ja
   end
 end

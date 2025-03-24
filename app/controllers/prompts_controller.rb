@@ -1,9 +1,10 @@
 class PromptsController < ApplicationController
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
+  before_action :check_prompt_owner, only: [:show, :edit, :update, :destroy]
 
   def index
     @prompt = Prompt.new
-    @prompts = Prompt.all
+    @prompts = Prompt.where(user_id: current_user.id)
     
     # 検索機能の追加
     if params[:search].present?
@@ -42,8 +43,19 @@ class PromptsController < ApplicationController
     end
 
     # タグ関連の処理
-    @all_tag_names = Tag.pluck(:name).uniq
-    @tag_counts = Tag.group(:name).count
+    # 現在のユーザーのプロンプトに関連付けられたタグのみを取得
+    user_prompts = Prompt.where(user_id: current_user.id).pluck(:id)
+    
+    # 現在のユーザーが使用しているタグのみを取得
+    @user_tags = Tag.where(prompt_id: user_prompts)
+                    .group(:name)
+                    .count
+    
+    # 表示用のタグリスト（ユーザーが使用しているタグのみ）
+    @all_tags_for_display = @user_tags.keys
+    
+    # タグの総数
+    @total_tag_count = @user_tags.keys.size
 
     # Turbo Streamsのリクエストに対応
     respond_to do |format|
@@ -60,7 +72,7 @@ class PromptsController < ApplicationController
       # タグ提案ボタンが押された場合
       begin
         service = TagSuggestionService.new
-        @suggested_tags = service.suggest_tags(@prompt)
+        @suggested_tags = service.suggest_tags(@prompt, current_user)
         Rails.logger.info "プロンプト詳細ページでタグ提案: #{@suggested_tags.map(&:name).inspect}"
       rescue => e
         Rails.logger.error "タグ提案エラー (詳細ページ): #{e.message}"
@@ -86,11 +98,12 @@ class PromptsController < ApplicationController
 
   def create
     @prompt = Prompt.new(prompt_params)
+    @prompt.user_id = current_user.id
 
     if @prompt.save
       redirect_to @prompt, notice: 'プロンプトが作成されました。'
     else
-      @prompts = Prompt.all
+      @prompts = Prompt.where(user_id: current_user.id)
       render :index, status: :unprocessable_entity
     end
   end
@@ -168,6 +181,12 @@ class PromptsController < ApplicationController
 
   def set_prompt
     @prompt = Prompt.find(params[:id])
+  end
+
+  def check_prompt_owner
+    unless @prompt.user_id == current_user.id
+      redirect_to prompts_path, alert: '他のユーザーのプロンプトにはアクセスできません。'
+    end
   end
 
   def prompt_params

@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-md-8">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h2">プロンプト一覧</h1>
+      <h1 class="h2" style="padding-left: 0;">プロンプト一覧</h1>
       <div class="d-flex align-items-center gap-3">
         <!-- 検索フォーム -->
         <div class="position-relative" style="min-width: 250px;">
@@ -143,17 +143,17 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span>既存タグ一覧</span>
-        <span class="badge text-dark"><%= @all_tag_names.count %>タグ</span>
+        <span class="badge text-dark"><%= @total_tag_count %>タグ</span>
       </div>
       <div class="card-body">
         <div class="mb-3">
           <input type="text" id="tagSearch" class="form-control form-control-sm" placeholder="タグを検索...">
         </div>
         <div class="tag-cloud" style="max-height: 300px; overflow-y: auto;">
-          <% @all_tag_names.each do |tag_name| %>
+          <% @all_tags_for_display.each do |tag_name| %>
             <%= link_to prompts_path(tag: tag_name), class: "badge bg-light text-dark text-decoration-none me-1 mb-1 tag-item" do %>
               <%= tag_name %>
-              <span class="ms-1 text-secondary">(<%= @tag_counts[tag_name] || 0 %>)</span>
+              <span class="ms-1 text-secondary">(<%= @user_tags[tag_name] %>)</span>
             <% end %>
           <% end %>
         </div>

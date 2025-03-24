@@ -12,8 +12,8 @@ class TagSuggestionService
     end
   end
 
-  def suggest_tags(prompt)
-    return fallback_tags(prompt) unless @api_available
+  def suggest_tags(prompt, current_user = nil)
+    return fallback_tags(prompt, current_user) unless @api_available
 
     begin
       Rails.logger.info "OpenAI APIを使用してタグを生成します: Prompt ID #{prompt.id}"
@@ -21,8 +21,11 @@ class TagSuggestionService
       # 既存のタグ一覧を取得
       existing_tags = get_existing_tags
       
+      # 現在のユーザーが既に使用しているタグを取得
+      user_tags = get_user_tags(current_user) if current_user
+      
       # OpenAI APIを使用してタグを生成（既存タグの中から選択）
-      tag_names = @openai_client.generate_tag_suggestions(prompt, existing_tags)
+      tag_names = @openai_client.generate_tag_suggestions(prompt, existing_tags, user_tags || [])
       
       Rails.logger.info "OpenAI APIからのレスポンス: #{tag_names.inspect}"
       
@@ -32,7 +35,7 @@ class TagSuggestionService
       Rails.logger.error "OpenAI APIでエラーが発生しました: #{e.message}"
       Rails.logger.info "フォールバックメカニズムを使用します"
       
-      fallback_tags(prompt)
+      fallback_tags(prompt, current_user)
     end
   end
 
@@ -45,6 +48,16 @@ class TagSuggestionService
     
     # 重複を除去してソート
     (standalone_tags + prompt_tags).uniq.sort
+  end
+
+  def get_user_tags(user)
+    return [] unless user
+    
+    # ユーザーが所有するプロンプトのIDを取得
+    user_prompt_ids = Prompt.where(user_id: user.id).pluck(:id)
+    
+    # ユーザーのプロンプトに関連付けられたタグを取得
+    Tag.where(prompt_id: user_prompt_ids).pluck(:name).uniq
   end
 
   def find_matching_tags(tag_names)
@@ -65,10 +78,22 @@ class TagSuggestionService
     tags
   end
 
-  def fallback_tags(prompt)
+  def fallback_tags(prompt, current_user = nil)
     # フォールバックメカニズム: 既存タグの中から基本的なタグを選択
     existing_tags = get_existing_tags
-    fallback_tag_names = (BASIC_TAGS & existing_tags) # 既存タグとの共通部分のみを使用
-    find_matching_tags(fallback_tag_names)
+    
+    # ユーザーが既に使用しているタグを優先
+    user_tags = get_user_tags(current_user) if current_user
+    
+    # ユーザータグ + 基本タグ + 既存タグの順で優先
+    prioritized_tags = []
+    prioritized_tags.concat(user_tags) if user_tags.present?
+    prioritized_tags.concat(BASIC_TAGS & existing_tags) # 基本タグと既存タグの共通部分
+    
+    # 重複を除去
+    prioritized_tags = prioritized_tags.uniq
+    
+    # ユーザータグと基本タグから提案
+    find_matching_tags(prioritized_tags)
   end
 end
