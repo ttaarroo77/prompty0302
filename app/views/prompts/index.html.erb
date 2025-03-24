@@ -20,6 +20,12 @@
             <div class="card h-100">
               <div class="card-body">
                 <h5 class="card-title"><%= prompt.title %></h5>
+                <% if prompt.url.present? %>
+                  <p class="card-text small text-truncate">
+                    <i class="bi bi-link-45deg"></i>
+                    <%= link_to prompt.url, prompt.url, target: "_blank", class: "text-muted text-decoration-none text-break" %>
+                  </p>
+                <% end %>
                 <p class="card-text text-truncate"><%= prompt.description %></p>
                 <div class="mb-2">
                   <% prompt.tags.each do |tag| %>
