@@ -1,4 +1,4 @@
-class CreateTags < ActiveRecord::Migration[8.0]
+class CreateTags < ActiveRecord::Migration[7.1]
   def change
     create_table :tags do |t|
       t.references :prompt, null: true, foreign_key: true

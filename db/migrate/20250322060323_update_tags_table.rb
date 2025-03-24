@@ -1,4 +1,4 @@
-class UpdateTagsTable < ActiveRecord::Migration[8.0]
+class UpdateTagsTable < ActiveRecord::Migration[7.1]
   def change
     change_column_null :tags, :prompt_id, true
     
