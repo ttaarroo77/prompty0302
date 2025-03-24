@@ -76,6 +76,8 @@
                     </p>
                   <% end %>
                   <p class="card-text text-truncate"><%= prompt.description %></p>
+
+                  
                   <div class="mb-2">
                     <% prompt.tags.each do |tag| %>
                       <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
@@ -83,13 +85,11 @@
                       <% end %>
                     <% end %>
 
-                    
-
-
-
-
-
+                  
                   </div>
+
+
+
                   <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
                 </div>
               </div>

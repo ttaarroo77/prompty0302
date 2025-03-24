@@ -69,10 +69,19 @@
         
         // aria-hidden属性を安全に処理
         // bodyにaria-hiddenが適用されないようにする
-        const bodyElement = document.querySelector('body[aria-hidden="true"]');
-        if (bodyElement) {
-          bodyElement.removeAttribute('aria-hidden');
-        }
+        document.querySelector('body').removeAttribute('aria-hidden');
+        
+        // ページ読み込み後と動的コンテンツ変更時にもaria-hidden="true"を監視して削除
+        const observer = new MutationObserver(function(mutations) {
+          if (document.body.getAttribute('aria-hidden') === 'true') {
+            document.body.removeAttribute('aria-hidden');
+          }
+        });
+        
+        observer.observe(document.body, { 
+          attributes: true, 
+          attributeFilter: ['aria-hidden'] 
+        });
       });
     </script>
   </body>
