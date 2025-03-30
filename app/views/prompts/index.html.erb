@@ -77,8 +77,6 @@
                   <% end %>
                   <p class="card-text text-truncate"><%= prompt.description %></p>
 
-                  
-                  <!-- タグ機能は一時的に無効化
                   <div class="mb-2">
                     <% prompt.tags.each do |tag| %>
                       <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>
@@ -86,7 +84,6 @@
                       <% end %>
                     <% end %>
                   </div>
-                  -->
 
                   <%= link_to "詳細", prompt_path(prompt), class: "btn btn-dark btn-sm" %>
                 </div>
@@ -152,15 +149,6 @@
         <span class="badge text-dark"><%= @total_tag_count %>タグ</span>
       </div>
       <div class="card-body">
-        <!-- タグ機能は一時的に無効化 -->
-        <div class="alert alert-info">
-          <p class="mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle"></i>
-            <span>タグ機能は現在メンテナンス中です</span>
-          </p>
-        </div>
-        
-        <!-- タグ検索・表示部分は一時的に無効化
         <div class="mb-3">
           <input type="text" id="tagSearch" class="form-control form-control-sm" placeholder="タグを検索...">
         </div>
@@ -172,7 +160,6 @@
             <% end %>
           <% end %>
         </div>
-        -->
       </div>
     </div>
   </div>
@@ -180,8 +167,6 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // タグ検索用のコードは一時的に無効化
-    /*
     const searchInput = document.getElementById('tagSearch');
     const tagItems = document.querySelectorAll('.tag-item');
     
@@ -197,6 +182,5 @@
         }
       });
     });
-    */
   });
 </script>
