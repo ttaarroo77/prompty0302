@@ -1,0 +1,20 @@
+<div id="current-tags" class="d-flex flex-wrap gap-2">
+  <% if prompt.tags.any? %>
+    <% prompt.tags.each do |tag| %>
+      <div class="tag-item d-flex align-items-center gap-1">
+        <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
+          <%= tag.name %>
+        </span>
+        <%= button_to prompt_tag_path(prompt, tag), 
+            method: :delete, 
+            class: "btn btn-sm p-0 text-danger",
+            form: { style: "display: inline;" },
+            data: { turbo: true } do %>
+          <i class="bi bi-x-circle" style="font-size: 14px;"></i>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="text-muted fst-italic mb-0">タグはまだありません</p>
+  <% end %>
+</div> 

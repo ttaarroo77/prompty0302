@@ -110,27 +110,88 @@
         </div>
 
         <!-- タグセクション：PCでは右側（4カラム）、スマホでは全幅 -->
-        <!-- タグ機能は一時的に無効化
         <div class="col-lg-4">
           <div class="card" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #F8F9FA; border: none; padding: 1rem;">
               <h5 class="mb-0">タグ管理</h5>
-              <button class="btn btn-outline-dark d-inline-flex align-items-center gap-2" disabled style="min-height: 38px;">
+              <%= link_to prompt_path(@prompt, suggested: true), class: "btn btn-outline-dark d-inline-flex align-items-center gap-2", id: "suggest-tags-button", style: "min-height: 38px;" do %>
                 <i class="bi bi-magic"></i>
                 <span>AIタグを提案</span>
-              </button>
+              <% end %>
             </div>
             <div class="card-body p-3 p-md-4">
-              <div class="alert alert-info">
-                <p class="mb-0 d-flex align-items-center gap-2">
-                  <i class="bi bi-info-circle"></i>
-                  <span>タグ機能は現在メンテナンス中です</span>
-                </p>
+              <!-- 既存のタグを表示 -->
+              <div class="mb-4">
+                <label class="form-label text-muted mb-2">現在のタグ</label>
+                <div class="d-flex flex-wrap gap-2">
+                  <% @prompt.tags.each do |tag| %>
+                    <div class="tag-item d-flex align-items-center gap-1">
+                      <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
+                        <%= tag.name %>
+                      </span>
+                      <%= link_to prompt_tag_path(@prompt, tag), 
+                          method: :delete, 
+                          data: { turbo_method: :delete, turbo_confirm: 'このタグを削除してもよろしいですか？' },
+                          class: "btn btn-sm p-0 text-danger" do %>
+                        <i class="bi bi-x-circle" style="font-size: 14px;"></i>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- タグ追加フォーム -->
+              <%= form_with(model: [@prompt, Tag.new], id: "tag-form", class: "mb-4") do |f| %>
+                <label class="form-label text-muted mb-2">新しいタグを追加</label>
+                <div class="input-group">
+                  <%= f.text_field :name, placeholder: "タグ名を入力...", class: "form-control form-control-sm", autocomplete: "off", style: "min-height: 30px;", id: "tag-name-input" %>          
+                  <button type="submit" class="btn btn-dark d-inline-flex align-items-center gap-2" style="min-height: 38px;">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
+                
+                <div class="form-text">Enterキーで追加できます</div>
+              <% end %>
+              
+              <!-- タグ提案セクション -->
+              <div id="suggested-tags-container">
+                <label class="form-label text-muted mb-2">AIによるタグ提案</label>
+                <div id="suggested-tags">
+                  <div class="d-flex flex-wrap gap-2">
+                    <% if @suggested_tags.present? && @suggested_tags.any? %>
+                      <% @suggested_tags.each do |tag_suggestion| %>
+                        <button type="button" 
+                                class="btn btn-outline-dark suggested-tag-btn" 
+                                style="min-height: 38px;"
+                                data-tag-name="<%= tag_suggestion.name %>"
+                                data-tag-id="<%= tag_suggestion.id %>"
+                                data-bs-toggle="tooltip"
+                                title="クリックでタグを追加">
+                          <%= tag_suggestion.name %>
+                        </button>
+                      <% end %>
+                    <% else %>
+                      <% default_tags = ["自己PR", "プロフィール", "ビジネス", "マーケティング", "ポートフォリオ", "実績", "デザイン"] %>
+                      <% default_tags.each_with_index do |tag, index| %>
+                        <button type="button" 
+                                class="btn btn-outline-dark suggested-tag-btn" 
+                                style="min-height: 38px;"
+                                data-tag-name="<%= tag %>"
+                                data-tag-id="<%= index + 1 %>"
+                                data-bs-toggle="tooltip"
+                                title="クリックでタグを追加">
+                          <%= tag %>
+                        </button>
+                      <% end %>
+                    <% end %>
+                  </div>
+                  <div class="form-text mt-2">提案タグをクリックするとタグを追加できます</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        -->
       </div>
 
       <div class="d-grid d-md-block mt-3">
@@ -165,45 +226,55 @@
       });
     }
     
-    // タグ関連のJavaScript機能も無効化
     // ツールチップの初期化
-    // const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    // const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    //   return new bootstrap.Tooltip(tooltipTriggerEl)
-    // });
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
 
     // タグ入力のEnterキーハンドリング
-    // const tagInput = document.querySelector('input[name="tag[name]"]');
-    // if (tagInput) {
-    //   tagInput.addEventListener('keydown', function(e) {
-    //     if (e.key === 'Enter') {
-    //       e.preventDefault();
-    //       this.closest('form').submit();
-    //     }
-    //   });
-    // }
+    const tagInput = document.querySelector('input[name="tag[name]"]');
+    if (tagInput) {
+      tagInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.closest('form').submit();
+        }
+      });
+    }
 
     // 提案タグのホバーエフェクト
-    // const suggestedTags = document.querySelectorAll('.suggested-tag-btn');
-    // suggestedTags.forEach(tag => {
-    //   tag.addEventListener('mouseover', function() {
-    //     this.classList.add('shadow-sm');
-    //   });
-    //   tag.addEventListener('mouseout', function() {
-    //     this.classList.remove('shadow-sm');
-    //   });
-    // });
+    const suggestedTags = document.querySelectorAll('.suggested-tag-btn');
+    suggestedTags.forEach(tag => {
+      tag.addEventListener('mouseover', function() {
+        this.classList.add('shadow-sm');
+      });
+      tag.addEventListener('mouseout', function() {
+        this.classList.remove('shadow-sm');
+      });
+    });
 
     // 提案タグのクリックイベント
-    // document.querySelectorAll('.suggested-tag-btn').forEach(button => {
-    //   button.addEventListener('click', function() {
-    //     const tagName = this.getAttribute('data-tag-name');
-    //     const tagInput = document.querySelector('input[name="tag[name]"]');
-    //     if (tagInput) {
-    //       tagInput.value = tagName;
-    //       tagInput.closest('form').submit();
-    //     }
-    //   });
-    // });
+    document.querySelectorAll('.suggested-tag-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const tagName = this.getAttribute('data-tag-name');
+        console.log('選択されたタグ名:', tagName);
+        
+        // タグ名を入力フィールドにセット
+        const tagInput = document.getElementById('tag-name-input');
+        if (tagInput) {
+          tagInput.value = tagName;
+          console.log('入力フィールドにセット:', tagInput.value);
+          
+          // フォームを取得して自動送信
+          const form = document.getElementById('tag-form');
+          console.log('フォーム取得:', form ? 'OK' : 'NG');
+          
+          if (form) {
+            form.submit();
+          }
+        }
+      });
+    });
   });
 </script>

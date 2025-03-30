@@ -96,8 +96,37 @@ class PromptsController < ApplicationController
 
   def show
     @prompt = Prompt.find(params[:id])
-    # 一時的にタグ提案を無効化
-    @suggested_tags = []
+    
+    # タグ提案の取得処理
+    if params[:suggested].present?
+      # 既存のタグ提案をクリア
+      AI::TagSuggestion.where(prompt_id: @prompt.id).delete_all
+      
+      # モックタグを生成して保存
+      mock_tags = [
+        { name: "自己PR", confidence_score: 0.9 },
+        { name: "プロフィール", confidence_score: 0.8 },
+        { name: "ビジネス", confidence_score: 0.7 },
+        { name: "マーケティング", confidence_score: 0.6 },
+        { name: "ポートフォリオ", confidence_score: 0.5 },
+        { name: "実績", confidence_score: 0.4 },
+        { name: "デザイン", confidence_score: 0.3 }
+      ]
+      
+      mock_tags.each do |tag|
+        AI::TagSuggestion.create(
+          prompt_id: @prompt.id,
+          name: tag[:name],
+          confidence_score: tag[:confidence_score],
+          applied: false
+        )
+      end
+      
+      flash[:notice] = 'AIがタグを生成しました'
+    end
+    
+    # タグ提案を取得
+    @suggested_tags = AI::TagSuggestion.where(prompt_id: @prompt.id).order(confidence_score: :desc)
     
     # attachment関連のエラーを回避するための安全策
     # デバッグモードで詳細情報をログに出力
