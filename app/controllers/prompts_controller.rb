@@ -97,47 +97,46 @@ class PromptsController < ApplicationController
   def show
     @prompt = Prompt.find(params[:id])
     
-    # タグ提案の取得処理
-    if params[:suggested].present?
-      # 既存のタグ提案をクリア
-      AI::TagSuggestion.where(prompt_id: @prompt.id).delete_all
-      
-      # モックタグを生成して保存
-      mock_tags = [
-        { name: "自己PR", confidence_score: 0.9 },
-        { name: "プロフィール", confidence_score: 0.8 },
-        { name: "ビジネス", confidence_score: 0.7 },
-        { name: "マーケティング", confidence_score: 0.6 },
-        { name: "ポートフォリオ", confidence_score: 0.5 },
-        { name: "実績", confidence_score: 0.4 },
-        { name: "デザイン", confidence_score: 0.3 }
-      ]
-      
-      mock_tags.each do |tag|
-        AI::TagSuggestion.create(
-          prompt_id: @prompt.id,
-          name: tag[:name],
-          confidence_score: tag[:confidence_score],
-          applied: false
-        )
+    begin
+      # タグ提案の取得処理
+      if params[:suggested].present?
+        # 既存のタグ提案をクリア
+        AI::TagSuggestion.where(prompt_id: @prompt.id).delete_all
+        
+        # モックタグを生成して保存
+        mock_tags = [
+          { name: "自己PR", confidence_score: 0.9 },
+          { name: "プロフィール", confidence_score: 0.8 },
+          { name: "ビジネス", confidence_score: 0.7 },
+          { name: "マーケティング", confidence_score: 0.6 },
+          { name: "ポートフォリオ", confidence_score: 0.5 },
+          { name: "実績", confidence_score: 0.4 },
+          { name: "デザイン", confidence_score: 0.3 }
+        ]
+        
+        mock_tags.each do |tag|
+          AI::TagSuggestion.create(
+            prompt_id: @prompt.id,
+            name: tag[:name],
+            confidence_score: tag[:confidence_score],
+            applied: false
+          )
+        end
+        
+        flash[:notice] = 'AIがタグを生成しました'
       end
       
-      flash[:notice] = 'AIがタグを生成しました'
+      # タグ提案を取得
+      @suggested_tags = AI::TagSuggestion.where(prompt_id: @prompt.id).order(confidence_score: :desc)
+    rescue => e
+      # エラーが発生した場合はログに出力し、デフォルト値を設定
+      Rails.logger.error "Error with tag suggestions: #{e.message}"
+      @suggested_tags = []
     end
     
-    # タグ提案を取得
-    @suggested_tags = AI::TagSuggestion.where(prompt_id: @prompt.id).order(confidence_score: :desc)
-    
-    # attachment関連のエラーを回避するための安全策
     # デバッグモードで詳細情報をログに出力
     Rails.logger.debug "Prompt ID: #{@prompt.id}, Title: #{@prompt.title}"
     Rails.logger.debug "User: #{@prompt.user.email}" if @prompt.user.present?
-    
-    if @prompt.attachment.attached?
-      Rails.logger.debug "Attachment attached: #{@prompt.attachment.filename}"
-    else
-      Rails.logger.debug "No attachment found for this prompt"
-    end
   rescue => e
     Rails.logger.error "Error in show action: #{e.message}"
     redirect_to prompts_path, alert: "プロンプトの表示中にエラーが発生しました。"
@@ -195,7 +194,6 @@ class PromptsController < ApplicationController
   end
 
   def prompt_params
-    params.require(:prompt).permit(:title, :description, :url, :attachment)
-    # params.require(:prompt).permit(:title, :description, :url, :attachment)
+    params.require(:prompt).permit(:title, :description, :url)
   end
 end

@@ -39,23 +39,6 @@
                   <label class="form-label text-muted mb-1">説明</label>
                   <div class="bg-white p-3 rounded"><%= simple_format(@prompt.description) %></div>
                 </div>
-                
-                <% if @prompt.attachment.attached? %>
-                  <div class="mb-3">
-                    <label class="form-label text-muted mb-1">添付ファイル</label>
-                    <div class="bg-white p-3 rounded">
-                      <% if @prompt.attachment.image? %>
-                        <%= image_tag @prompt.attachment, class: "img-fluid rounded" %>
-                      <% elsif @prompt.attachment.video? %>
-                        <%= video_tag url_for(@prompt.attachment), controls: true, class: "img-fluid rounded" %>
-                      <% elsif @prompt.attachment.audio? %>
-                        <%= audio_tag url_for(@prompt.attachment), controls: true %>
-                      <% else %>
-                        <%= link_to @prompt.attachment.filename.to_s, url_for(@prompt.attachment), class: "btn btn-outline-primary", target: "_blank" %>
-                      <% end %>
-                    </div>
-                  </div>
-                <% end %>
               </div>
             </div>
             
@@ -87,17 +70,6 @@
                   <%= f.text_area :description, rows: 8, class: "form-control" %>
                 </div>
                 
-                <div class="mb-3">
-                  <%= f.label :attachment, "添付ファイル", class: "form-label text-muted" %>
-                  <%= f.file_field :attachment, class: "form-control" %>
-                  <% if @prompt.attachment.attached? %>
-                    <div class="form-text">
-                      現在のファイル: <%= @prompt.attachment.filename %> 
-                      (<%= number_to_human_size(@prompt.attachment.byte_size) %>)
-                    </div>
-                  <% end %>
-                </div>
-                
                 <div class="d-flex justify-content-end gap-2 mt-4">
                   <button type="button" id="cancel-edit" class="btn btn-outline-secondary" style="min-height: 38px; min-width: 88px;">
                     キャンセル
@@ -124,18 +96,22 @@
               <div class="mb-4">
                 <label class="form-label text-muted mb-2">現在のタグ</label>
                 <div class="d-flex flex-wrap gap-2">
-                  <% @prompt.tags.each do |tag| %>
-                    <div class="tag-item d-flex align-items-center gap-1">
-                      <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
-                        <%= tag.name %>
-                      </span>
-                      <%= link_to prompt_tag_path(@prompt, tag), 
-                          method: :delete, 
-                          data: { turbo_method: :delete, turbo_confirm: 'このタグを削除してもよろしいですか？' },
-                          class: "btn btn-sm p-0 text-danger" do %>
-                        <i class="bi bi-x-circle" style="font-size: 14px;"></i>
-                      <% end %>
-                    </div>
+                  <% if @prompt.tags.present? %>
+                    <% @prompt.tags.each do |tag| %>
+                      <div class="tag-item d-flex align-items-center gap-1">
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
+                          <%= tag.name %>
+                        </span>
+                        <%= link_to prompt_tag_path(@prompt, tag), 
+                            method: :delete, 
+                            data: { turbo_method: :delete, turbo_confirm: 'このタグを削除してもよろしいですか？' },
+                            class: "btn btn-sm p-0 text-danger" do %>
+                          <i class="bi bi-x-circle" style="font-size: 14px;"></i>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <p class="text-muted small">まだタグがありません。下のフォームから追加してください。</p>
                   <% end %>
                 </div>
               </div>
