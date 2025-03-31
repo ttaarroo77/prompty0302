@@ -104,8 +104,12 @@
                         </span>
                         <%= button_to prompt_tag_path(@prompt, tag), 
                             method: :delete, 
-                            form: { data: { turbo_confirm: 'このタグを削除してもよろしいですか？' }, style: "display: inline;" }, 
-                            class: "btn btn-sm p-0 text-danger" do %>
+                            form: { 
+                              data: { turbo_confirm: 'このタグを削除してもよろしいですか？' }, 
+                              style: "display: inline; margin: 0; padding: 0;" 
+                            }, 
+                            class: "btn btn-sm p-0 text-danger",
+                            data: { turbo_method: :delete } do %>
                           <i class="bi bi-x-circle" style="font-size: 14px;"></i>
                         <% end %>
                       </div>
