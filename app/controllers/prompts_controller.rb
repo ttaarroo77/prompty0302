@@ -1,7 +1,8 @@
 class PromptsController < ApplicationController
+  require_relative '../models/ai'
+  
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
   before_action :check_prompt_owner, only: [:show, :edit, :update, :destroy]
-
 
   def index
     @prompt = Prompt.new
@@ -20,80 +21,6 @@ class PromptsController < ApplicationController
     end
   end
 
-  # def index
-  #   @prompt = Prompt.new
-  #   @prompts = Prompt.where(user_id: current_user.id)
-  #                   # .includes(:tags)  # タグを事前に読み込み
-    
-  #   # # 検索機能の追加
-  #   # if params[:search].present?
-  #   #   search_term = "%#{params[:search].downcase}%"
-  #   #   @prompts = @prompts.left_joins(:tags)
-      
-  #   #   # データベースアダプタに応じて適切な検索メソッドを使用
-  #   #   if ActiveRecord::Base.connection.adapter_name.downcase == 'postgresql'
-  #   #     @prompts = @prompts.where("prompts.title ILIKE ? OR prompts.description ILIKE ? OR tags.name ILIKE ?", 
-  #   #                              search_term, search_term, search_term)
-  #   #   else
-  #   #     @prompts = @prompts.where("LOWER(prompts.title) LIKE ? OR LOWER(prompts.description) LIKE ? OR LOWER(tags.name) LIKE ?", 
-  #   #                              search_term, search_term, search_term)
-  #   #   end
-      
-  #   #   @prompts = @prompts.distinct
-  #   # end
-    
-  #   # # タグによるフィルタリング
-  #   # if params[:tag].present?
-  #   #   @prompts = @prompts.joins(:tags).where(tags: { name: params[:tag] })
-  #   # end
-
-  #   # # ソート機能の追加
-  #   # case params[:sort]
-  #   # when 'title_asc'
-  #   #   @prompts = @prompts.order(title: :asc)
-  #   # when 'title_desc'
-  #   #   @prompts = @prompts.order(title: :desc)
-  #   # when 'created_asc'
-  #   #   @prompts = @prompts.order(created_at: :asc)
-  #   # when 'created_desc'
-  #   #   @prompts = @prompts.order(created_at: :desc)
-  #   # else
-  #   #   @prompts = @prompts.order(created_at: :desc) # デフォルトは作成日時の降順
-  #   # end
-
-  #   # # タグ関連の処理
-  #   # # 現在のユーザーのプロンプトに関連付けられたタグのみを取得
-  #   # user_prompts = Prompt.where(user_id: current_user.id).pluck(:id)
-    
-  #   # # 現在のユーザーが使用しているタグのみを取得
-  #   # @user_tags = Tag.where(prompt_id: user_prompts)
-  #   #                 .group(:name)
-  #   #                 .count
-    
-  #   # # 表示用のタグリスト（ユーザーが使用しているタグのみ）
-  #   # @all_tags_for_display = @user_tags.keys
-    
-
-
-  #   # # タグの総数 / # タグ機能を無効化しているので、デフォルト値を設定
-  #   # @total_tag_count = @user_tags.keys.size
-  #   @user_tags = {}
-  #   @all_tags_for_display = []
-  #   @total_tag_count = 0  # 直接0を設定
-
-
-
-  #   # Turbo Streamsのリクエストに対応
-  #   respond_to do |format|
-  #     format.html
-  #     format.turbo_stream
-  #   end
-  # end
-
-
-
-
-
   def show
     @prompt = Prompt.find(params[:id])
     
@@ -101,7 +28,7 @@ class PromptsController < ApplicationController
       # タグ提案の取得処理
       if params[:suggested].present?
         # 既存のタグ提案をクリア
-        AI::TagSuggestion.where(prompt_id: @prompt.id).delete_all
+        ::AI::TagSuggestion.where(prompt_id: @prompt.id).delete_all
         
         # モックタグを生成して保存
         mock_tags = [
@@ -115,7 +42,7 @@ class PromptsController < ApplicationController
         ]
         
         mock_tags.each do |tag|
-          AI::TagSuggestion.create(
+          ::AI::TagSuggestion.create(
             prompt_id: @prompt.id,
             name: tag[:name],
             confidence_score: tag[:confidence_score],
@@ -127,10 +54,11 @@ class PromptsController < ApplicationController
       end
       
       # タグ提案を取得
-      @suggested_tags = AI::TagSuggestion.where(prompt_id: @prompt.id).order(confidence_score: :desc)
+      @suggested_tags = ::AI::TagSuggestion.where(prompt_id: @prompt.id).order(confidence_score: :desc)
     rescue => e
       # エラーが発生した場合はログに出力し、デフォルト値を設定
       Rails.logger.error "Error with tag suggestions: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
       @suggested_tags = []
     end
     

@@ -1,18 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
+// タグ操作のためのStimulusコントローラー
+// 現在は使用していないが、将来的に拡張する可能性があるため維持
 export default class extends Controller {
-  static targets = ["form"]
-
   connect() {
     console.log("Tag controller connected")
-  }
-
-  delete(event) {
-    event.preventDefault()
-
-    if (confirm("このタグを削除してもよろしいですか？")) {
-      const form = this.element
-      form.requestSubmit()
-    }
   }
 } 
