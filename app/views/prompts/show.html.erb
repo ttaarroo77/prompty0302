@@ -102,9 +102,9 @@
                         <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
                           <%= tag.name %>
                         </span>
-                        <%= link_to prompt_tag_path(@prompt, tag), 
+                        <%= button_to prompt_tag_path(@prompt, tag), 
                             method: :delete, 
-                            data: { turbo_method: :delete, turbo_confirm: 'このタグを削除してもよろしいですか？' },
+                            form: { data: { turbo_confirm: 'このタグを削除してもよろしいですか？' }, style: "display: inline;" }, 
                             class: "btn btn-sm p-0 text-danger" do %>
                           <i class="bi bi-x-circle" style="font-size: 14px;"></i>
                         <% end %>

@@ -36,20 +36,21 @@ class TagsController < ApplicationController
   end
 
   def destroy
-    @tag = Tag.find(params[:id])
+    @tag = @prompt.tags.find(params[:id])
     
-    # タグとプロンプトの関連付けを解除
-    @prompt.tags.delete(@tag)
-    
-    flash[:notice] = "タグ「#{@tag.name}」を削除しました。"
-    
-    # 提案タグのIDがある場合は保持
-    tag_ids = []
-    if params[:suggested_tag_ids].present?
-      tag_ids = params[:suggested_tag_ids].is_a?(Array) ? params[:suggested_tag_ids] : params[:suggested_tag_ids].split(',')
+    if @prompt.tags.delete(@tag)
+      respond_to do |format|
+        format.html { redirect_to @prompt, notice: "タグ '#{@tag.name}' が削除されました。" }
+        format.turbo_stream { redirect_to @prompt, notice: "タグ '#{@tag.name}' が削除されました。" }
+        format.json { head :no_content }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to @prompt, alert: "タグの削除に失敗しました。" }
+        format.turbo_stream { redirect_to @prompt, alert: "タグの削除に失敗しました。" }
+        format.json { render json: { error: "タグの削除に失敗しました。" }, status: :unprocessable_entity }
+      end
     end
-    
-    redirect_to prompt_path(@prompt, suggested_tag_ids: tag_ids)
   end
 
   def suggest
