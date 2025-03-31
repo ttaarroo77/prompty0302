@@ -6,8 +6,35 @@ class PromptsController < ApplicationController
 
   def index
     @prompt = Prompt.new
-    # 単純にプロンプトを取得するだけ
-    @prompts = Prompt.where(user_id: current_user.id).order(created_at: :desc)
+    # ベースのクエリを作成
+    query = Prompt.where(user_id: current_user.id)
+    
+    # タグフィルターの適用
+    if params[:tag].present?
+      query = query.joins(:tags).where(tags: { name: params[:tag] })
+    end
+    
+    # 検索フィルターの適用
+    if params[:search].present?
+      search_term = "%#{params[:search]}%"
+      query = query.where("title LIKE ? OR description LIKE ?", search_term, search_term)
+                   .or(query.joins(:tags).where("tags.name LIKE ?", search_term))
+    end
+    
+    # ソートの適用
+    case params[:sort]
+    when 'title_asc'
+      query = query.order(title: :asc)
+    when 'title_desc'
+      query = query.order(title: :desc)
+    when 'created_asc'
+      query = query.order(created_at: :asc)
+    when 'created_desc', nil
+      query = query.order(created_at: :desc)
+    end
+    
+    # 最終結果を取得
+    @prompts = query.distinct
     
     # 必要な変数の初期化
     @user_tags = {}
@@ -28,6 +55,13 @@ class PromptsController < ApplicationController
     @user_tags = tags_with_count
     @all_tags_for_display = @user_tags.keys
     @total_tag_count = @all_tags_for_display.size
+    
+    # 現在の検索条件
+    @search_filters = {
+      search: params[:search],
+      tag: params[:tag],
+      sort: params[:sort]
+    }
   
     respond_to do |format|
       format.html
