@@ -14,6 +14,20 @@ class PromptsController < ApplicationController
     @all_tags_for_display = []
     @total_tag_count = 0
     @suggested_tags = []
+    
+    # ユーザーに関連するタグを取得
+    user_prompt_ids = Prompt.where(user_id: current_user.id).pluck(:id)
+    
+    # ユーザーのプロンプトに紐づくタグを取得
+    tags_with_count = Tag.joins(:taggings)
+                         .where(taggings: { prompt_id: user_prompt_ids })
+                         .group(:name)
+                         .count
+    
+    # タグの表示用データを準備
+    @user_tags = tags_with_count
+    @all_tags_for_display = @user_tags.keys
+    @total_tag_count = @all_tags_for_display.size
   
     respond_to do |format|
       format.html
