@@ -1,10 +1,12 @@
 # AIモジュールを読み込む
-require_relative '../app/models/ai/tag_suggestion'
+# require_relative '../app/models/ai/tag_suggestion'
+require_relative '../app/models/AI/tag_suggestion'
+
 
 # 既存のデータをリセット（オプション）
 if ENV['RESET_DATABASE'] == 'true'
   puts "既存のデータをリセットしています..."
-  AI::TagSuggestion.destroy_all
+  AI::TagSuggestion.destroy_all # ここ、参照の問題・・大丈夫？？
   Prompt.destroy_all
   Tag.destroy_all
   User.destroy_all
@@ -304,10 +306,10 @@ prompts_data.each do |prompt_data|
   ]
   
   # タグ提案をクリアして新しいものを作成
-  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all # ここ、参照の問題・・大丈夫？？
   
   ai_tags.sample(3).each do |tag_data|
-    AI::TagSuggestion.create!(
+    AI::TagSuggestion.create!( # ここ、参照の問題・・大丈夫？？
       prompt_id: prompt.id,
       name: tag_data[:name],
       confidence_score: tag_data[:confidence_score],
@@ -381,10 +383,10 @@ yamada_prompts_data.each do |prompt_data|
     { name: "創作", confidence_score: 0.65 }
   ]
   
-  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all # ここ、参照の問題・・大丈夫？？
   
   yamada_ai_tags.sample(3).each do |tag_data|
-    AI::TagSuggestion.create!(
+    AI::TagSuggestion.create!( # ここ、参照の問題・・大丈夫？？
       prompt_id: prompt.id,
       name: tag_data[:name],
       confidence_score: tag_data[:confidence_score],
@@ -474,7 +476,7 @@ tanaka_prompts_data.each do |prompt_data|
   AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
   tanaka_ai_tags.sample(3).each do |tag_data|
-    AI::TagSuggestion.create!(
+    AI::TagSuggestion.create!( # ここ、参照の問題・・大丈夫？？
       prompt_id: prompt.id,
       name: tag_data[:name],
       confidence_score: tag_data[:confidence_score],
