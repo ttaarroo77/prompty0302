@@ -1,9 +1,55 @@
 <div class="row">
   <div class="col-md-8">
+    <!-- 見出しのみ -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2" style="padding-left: 0;">プロンプト一覧</h1>
-      
-      <!-- アクティブなフィルター表示 -->
+    </div>
+
+    <!-- 検索フォーム、ソートオプション、アクティブなフィルター表示を同じ行に配置 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <!-- 左側: 検索フォームとソートオプション -->
+      <div class="d-flex align-items-center gap-3">
+        <!-- 検索フォーム -->
+        <div class="position-relative" style="min-width: 250px;">
+          <%= form_with(url: prompts_path, method: :get, data: { controller: "search", turbo_frame: "search-results" }) do |f| %>
+            <%= f.hidden_field :sort, value: params[:sort] if params[:sort].present? %>
+            <%= f.hidden_field :tag, value: params[:tag] if params[:tag].present? %>
+            <div class="input-group">
+              <%= f.search_field :search,
+                  class: "form-control",
+                  placeholder: "タイトル、説明、タグで検索...",
+                  value: params[:search],
+                  data: {
+                    action: "input->search#search",
+                    search_target: "input"
+                  } %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- ソートオプション -->
+        <div class="dropdown">
+          <button class="btn btn-outline-dark dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-sort-down me-1"></i>
+            <%= case params[:sort]
+              when 'title_asc' then 'タイトル（昇順）'
+              when 'title_desc' then 'タイトル（降順）'
+              when 'created_asc' then '作成日時（古い順）'
+              when 'created_desc' then '作成日時（新しい順）'
+              else '並び替え'
+              end %>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+            <li><%= link_to 'タイトル（昇順）', prompts_path(sort: 'title_asc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'title_asc'}" %></li>
+            <li><%= link_to 'タイトル（降順）', prompts_path(sort: 'title_desc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'title_desc'}" %></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><%= link_to '作成日時（新しい順）', prompts_path(sort: 'created_desc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'created_desc' || params[:sort].nil?}" %></li>
+            <li><%= link_to '作成日時（古い順）', prompts_path(sort: 'created_asc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'created_asc'}" %></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 右側: アクティブなフィルター表示 + 絞り込み解除ボタン -->
       <% if params[:search].present? || params[:tag].present? || params[:sort].present? %>
         <div class="d-flex align-items-center">
           <div class="d-flex flex-wrap align-items-center gap-2 me-2">
@@ -38,50 +84,7 @@
         </div>
       <% end %>
     </div>
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div class="d-flex align-items-center gap-3">
-        <!-- 検索フォーム -->
-        <div class="position-relative" style="min-width: 250px;">
-          <%= form_with(url: prompts_path, method: :get, data: { controller: "search", turbo_frame: "search-results" }) do |f| %>
-            <%= f.hidden_field :sort, value: params[:sort] if params[:sort].present? %>
-            <%= f.hidden_field :tag, value: params[:tag] if params[:tag].present? %>
-            <div class="input-group">
-              <%= f.search_field :search, 
-                  class: "form-control",
-                  placeholder: "タイトル、説明、タグで検索...",
-                  value: params[:search],
-                  data: { 
-                    action: "input->search#search",
-                    search_target: "input"
-                  } %>
-            </div>
-          <% end %>
-        </div>
 
-        <!-- ソートオプション -->
-        <div class="dropdown">
-          <button class="btn btn-outline-dark dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-sort-down me-1"></i>
-            <%= case params[:sort]
-              when 'title_asc' then 'タイトル（昇順）'
-              when 'title_desc' then 'タイトル（降順）'
-              when 'created_asc' then '作成日時（古い順）'
-              when 'created_desc' then '作成日時（新しい順）'
-              else '並び替え'
-              end %>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
-            <li><%= link_to 'タイトル（昇順）', prompts_path(sort: 'title_asc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'title_asc'}" %></li>
-            <li><%= link_to 'タイトル（降順）', prompts_path(sort: 'title_desc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'title_desc'}" %></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><%= link_to '作成日時（新しい順）', prompts_path(sort: 'created_desc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'created_desc' || params[:sort].nil?}" %></li>
-            <li><%= link_to '作成日時（古い順）', prompts_path(sort: 'created_asc', tag: params[:tag], search: params[:search]), class: "dropdown-item #{'active' if params[:sort] == 'created_asc'}" %></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    
     <%= turbo_frame_tag "search-results" do %>
       <% if @prompts.any? %>
         <div class="row">
