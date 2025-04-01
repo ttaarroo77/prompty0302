@@ -6,35 +6,66 @@ class PromptsController < ApplicationController
 
   def index
     @prompt = Prompt.new
-    # ベースのクエリを作成
-    query = Prompt.where(user_id: current_user.id)
-    
-    # タグフィルターの適用
-    if params[:tag].present?
-      query = query.joins(:tags).where(tags: { name: params[:tag] })
-    end
     
     # 検索フィルターの適用
     if params[:search].present?
       search_term = "%#{params[:search]}%"
-      query = query.where("title LIKE ? OR description LIKE ?", search_term, search_term)
-                   .or(query.joins(:tags).where("tags.name LIKE ?", search_term))
+      
+      # IDでフィルタリングする方法を使用
+      title_desc_ids = Prompt.where(user_id: current_user.id)
+                            .where("title LIKE ? OR description LIKE ?", search_term, search_term)
+                            .pluck(:id)
+      
+      tag_ids = Prompt.where(user_id: current_user.id)
+                      .joins(:tags)
+                      .where("tags.name LIKE ?", search_term)
+                      .pluck(:id)
+      
+      # IDの配列を結合して重複を排除
+      combined_ids = (title_desc_ids + tag_ids).uniq
+      
+      # マッチしたIDのプロンプトを取得
+      @prompts = Prompt.where(id: combined_ids)
+      
+      # タグフィルター
+      if params[:tag].present?
+        @prompts = @prompts.joins(:tags).where(tags: { name: params[:tag] }).distinct
+      end
+      
+      # ソート
+      case params[:sort]
+      when 'title_asc'
+        @prompts = @prompts.order(title: :asc)
+      when 'title_desc'
+        @prompts = @prompts.order(title: :desc)
+      when 'created_asc'
+        @prompts = @prompts.order(created_at: :asc)
+      else
+        @prompts = @prompts.order(created_at: :desc)
+      end
+    else
+      # 検索条件がない場合の処理
+      query = Prompt.where(user_id: current_user.id)
+      
+      # タグフィルターの適用
+      if params[:tag].present?
+        query = query.joins(:tags).where(tags: { name: params[:tag] }).distinct
+      end
+      
+      # ソートの適用
+      case params[:sort]
+      when 'title_asc'
+        query = query.order(title: :asc)
+      when 'title_desc'
+        query = query.order(title: :desc)
+      when 'created_asc'
+        query = query.order(created_at: :asc)
+      when 'created_desc', nil
+        query = query.order(created_at: :desc)
+      end
+      
+      @prompts = query
     end
-    
-    # ソートの適用
-    case params[:sort]
-    when 'title_asc'
-      query = query.order(title: :asc)
-    when 'title_desc'
-      query = query.order(title: :desc)
-    when 'created_asc'
-      query = query.order(created_at: :asc)
-    when 'created_desc', nil
-      query = query.order(created_at: :desc)
-    end
-    
-    # 最終結果を取得
-    @prompts = query.distinct
     
     # 必要な変数の初期化
     @user_tags = {}
