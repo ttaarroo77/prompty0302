@@ -73,4 +73,5 @@ Rails.application.configure do
 
   # Enable DNS rebinding protection and other `Host` header attacks.
   config.hosts << ENV.fetch("HOST", "prompty03.herokuapp.com")
+  config.hosts << "prompty0302-492bf5fe391f.herokuapp.com"
 end
