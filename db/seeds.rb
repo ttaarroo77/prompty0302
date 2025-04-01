@@ -306,14 +306,13 @@ prompts_data.each do |prompt_data|
   ]
   
   # タグ提案をクリアして新しいものを作成
-  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all # ここ、参照の問題・・大丈夫？？
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
   ai_tags.sample(3).each do |tag_data|
-    AI::TagSuggestion.create!( # ここ、参照の問題・・大丈夫？？
+    AI::TagSuggestion.create!(
       prompt_id: prompt.id,
       name: tag_data[:name],
       confidence_score: tag_data[:confidence_score],
-      source: "AI",
       applied: false
     )
     puts "AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
@@ -383,14 +382,13 @@ yamada_prompts_data.each do |prompt_data|
     { name: "創作", confidence_score: 0.65 }
   ]
   
-  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all # ここ、参照の問題・・大丈夫？？
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
   yamada_ai_tags.sample(3).each do |tag_data|
-    AI::TagSuggestion.create!( # ここ、参照の問題・・大丈夫？？
+    AI::TagSuggestion.create!(
       prompt_id: prompt.id,
       name: tag_data[:name],
       confidence_score: tag_data[:confidence_score],
-      source: "AI",
       applied: false
     )
     puts "山田太郎のプロンプト用AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
@@ -476,11 +474,10 @@ tanaka_prompts_data.each do |prompt_data|
   AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
   tanaka_ai_tags.sample(3).each do |tag_data|
-    AI::TagSuggestion.create!( # ここ、参照の問題・・大丈夫？？
+    AI::TagSuggestion.create!(
       prompt_id: prompt.id,
       name: tag_data[:name],
       confidence_score: tag_data[:confidence_score],
-      source: "AI",
       applied: false
     )
     puts "田中花子のプロンプト用AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
