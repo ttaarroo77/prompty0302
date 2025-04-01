@@ -31,6 +31,12 @@
             <%= f.text_area :description, rows: 10, class: "form-control" %>
           </div>
           
+          <div class="mb-3">
+            <label for="tags" class="form-label">タグ</label>
+            <input type="text" name="tags" id="tags" class="form-control" value="<%= @prompt.tags.map(&:name).join(', ') %>" placeholder="カンマ区切りで入力（例: Rails, 初心者, チュートリアル）">
+            <div class="form-text">複数のタグはカンマ（,）で区切ってください</div>
+          </div>
+          
           <div class="d-flex justify-content-between">
             <%= link_to "キャンセル", prompt_path(@prompt), class: "btn btn-outline-secondary" %>
             <%= f.submit "更新する", class: "btn btn-dark" %>

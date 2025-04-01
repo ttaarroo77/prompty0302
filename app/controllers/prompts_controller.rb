@@ -160,6 +160,16 @@ class PromptsController < ApplicationController
 
     respond_to do |format|
       if @prompt.save
+        # タグの処理
+        if params[:tags].present?
+          tags = params[:tags].split(',').map(&:strip)
+          tags.each do |tag_name|
+            next if tag_name.blank?
+            tag = Tag.find_or_create_by(name: tag_name)
+            Tagging.create(prompt: @prompt, tag: tag)
+          end
+        end
+        
         format.html { redirect_to prompts_path, notice: "プロンプトが作成されました。" }
         format.json { render :show, status: :created, location: @prompt }
       else
@@ -171,9 +181,21 @@ class PromptsController < ApplicationController
 
   def update
     respond_to do |format|
-
-      
       if @prompt.update(prompt_params)
+        # タグの処理
+        if params[:tags].present?
+          # 既存のタグを削除
+          @prompt.taggings.destroy_all
+          
+          # 新しいタグを追加
+          tags = params[:tags].split(',').map(&:strip)
+          tags.each do |tag_name|
+            next if tag_name.blank?
+            tag = Tag.find_or_create_by(name: tag_name)
+            Tagging.create(prompt: @prompt, tag: tag)
+          end
+        end
+        
         format.html { redirect_to prompt_path(@prompt), notice: "プロンプトが更新されました。" }
         format.json { render :show, status: :ok, location: @prompt }
       else

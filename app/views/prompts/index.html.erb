@@ -165,6 +165,12 @@
             <%= f.text_area :description, rows: 5, class: "form-control" %>
           </div>
           
+          <div class="mb-3">
+            <label for="tags" class="form-label">タグ</label>
+            <input type="text" name="tags" id="tags" class="form-control" placeholder="カンマ区切りで入力（例: Rails, 初心者, チュートリアル）">
+            <div class="form-text">複数のタグはカンマ（,）で区切ってください</div>
+          </div>
+          
           <%= f.submit "追加する", class: "btn btn-dark w-100" %>
         <% end %>
       </div>
