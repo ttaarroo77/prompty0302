@@ -1,0 +1,110 @@
+<%= form_with(model: prompt, local: true) do |form| %>
+  <% if prompt.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(prompt.errors.count, "error") %> prohibited this prompt from being saved:</h2>
+      <ul>
+        <% prompt.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title, class: "form-control", maxlength: 100 %>
+    <div class="text-muted text-end">
+      <span class="title-counter">0</span>/100
+    </div>
+    <div class="invalid-feedback title-error" style="display: none;">
+      タイトルは100文字以内で入力してください
+    </div>
+  </div>
+
+  <div class="field">
+    <%= form.label :description %>
+    <%= form.text_area :description, class: "form-control", maxlength: 500 %>
+    <div class="text-muted text-end">
+      <span class="description-counter">0</span>/500
+    </div>
+    <div class="invalid-feedback description-error" style="display: none;">
+      説明は500文字以内で入力してください
+    </div>
+  </div>
+
+  <div class="field">
+    <%= form.label :content %>
+    <%= form.text_area :content, class: "form-control", maxlength: 2000 %>
+    <div class="text-muted text-end">
+      <span class="content-counter">0</span>/2000
+    </div>
+    <div class="invalid-feedback content-error" style="display: none;">
+      コンテンツは2000文字以内で入力してください
+    </div>
+  </div>
+
+  <div class="field">
+    <%= form.label :notes %>
+    <%= form.text_area :notes, class: "form-control", maxlength: 1000 %>
+    <div class="text-muted text-end">
+      <span class="notes-counter">0</span>/1000
+    </div>
+    <div class="invalid-feedback notes-error" style="display: none;">
+      メモは1000文字以内で入力してください
+    </div>
+  </div>
+
+  <div class="actions">
+    <%= form.submit class: "btn btn-primary" %>
+  </div>
+<% end %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const updateCounter = (input, counter, error) => {
+    const count = input.value.length;
+    counter.textContent = count;
+    if (count > input.maxLength) {
+      counter.classList.add('text-danger');
+      input.classList.add('is-invalid');
+      error.style.display = 'block';
+    } else {
+      counter.classList.remove('text-danger');
+      input.classList.remove('is-invalid');
+      error.style.display = 'none';
+    }
+  };
+
+  const titleInput = document.querySelector('#prompt_title');
+  const titleCounter = document.querySelector('.title-counter');
+  const titleError = document.querySelector('.title-error');
+  if (titleInput && titleCounter && titleError) {
+    titleInput.addEventListener('input', () => updateCounter(titleInput, titleCounter, titleError));
+    updateCounter(titleInput, titleCounter, titleError);
+  }
+
+  const descriptionInput = document.querySelector('#prompt_description');
+  const descriptionCounter = document.querySelector('.description-counter');
+  const descriptionError = document.querySelector('.description-error');
+  if (descriptionInput && descriptionCounter && descriptionError) {
+    descriptionInput.addEventListener('input', () => updateCounter(descriptionInput, descriptionCounter, descriptionError));
+    updateCounter(descriptionInput, descriptionCounter, descriptionError);
+  }
+
+  const contentInput = document.querySelector('#prompt_content');
+  const contentCounter = document.querySelector('.content-counter');
+  const contentError = document.querySelector('.content-error');
+  if (contentInput && contentCounter && contentError) {
+    contentInput.addEventListener('input', () => updateCounter(contentInput, contentCounter, contentError));
+    updateCounter(contentInput, contentCounter, contentError);
+  }
+
+  const notesInput = document.querySelector('#prompt_notes');
+  const notesCounter = document.querySelector('.notes-counter');
+  const notesError = document.querySelector('.notes-error');
+  if (notesInput && notesCounter && notesError) {
+    notesInput.addEventListener('input', () => updateCounter(notesInput, notesCounter, notesError));
+    updateCounter(notesInput, notesCounter, notesError);
+  }
+});
+</script>

@@ -3,6 +3,7 @@ class PromptsController < ApplicationController
   
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
   before_action :check_prompt_owner, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate_user!
 
   def index
     @prompt = Prompt.new
@@ -155,8 +156,7 @@ class PromptsController < ApplicationController
   end
 
   def create
-    @prompt = Prompt.new(prompt_params)
-    @prompt.user = current_user
+    @prompt = current_user.prompts.build(prompt_params)
 
     respond_to do |format|
       if @prompt.save
@@ -170,7 +170,7 @@ class PromptsController < ApplicationController
           end
         end
         
-        format.html { redirect_to prompts_path, notice: "プロンプトが作成されました。" }
+        format.html { redirect_to @prompt, notice: 'プロンプトを作成しました' }
         format.json { render :show, status: :created, location: @prompt }
       else
         format.html { render :new, status: :unprocessable_entity }
@@ -196,7 +196,7 @@ class PromptsController < ApplicationController
           end
         end
         
-        format.html { redirect_to prompt_path(@prompt), notice: "プロンプトが更新されました。" }
+        format.html { redirect_to @prompt, notice: 'プロンプトを更新しました' }
         format.json { render :show, status: :ok, location: @prompt }
       else
         format.html { render :edit, status: :unprocessable_entity }
@@ -207,13 +207,16 @@ class PromptsController < ApplicationController
 
   def destroy
     @prompt.destroy
-    redirect_to prompts_path, notice: 'プロンプトが削除されました。'
+    respond_to do |format|
+      format.html { redirect_to prompts_url, notice: 'プロンプトを削除しました' }
+      format.json { head :no_content }
+    end
   end
 
   private
 
   def set_prompt
-    @prompt = Prompt.find(params[:id])
+    @prompt = current_user.prompts.find(params[:id])
   end
 
   def check_prompt_owner
@@ -223,6 +226,6 @@ class PromptsController < ApplicationController
   end
 
   def prompt_params
-    params.require(:prompt).permit(:title, :description, :url)
+    params.require(:prompt).permit(:title, :description, :content, :notes)
   end
 end
