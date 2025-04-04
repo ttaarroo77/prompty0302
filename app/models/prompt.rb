@@ -5,6 +5,7 @@ class Prompt < ApplicationRecord
 
   validates :title, presence: true, length: { maximum: 15 }
   validates :content, presence: true
+  validates :description, presence: true, length: { maximum: 500 }
   validates :notes, length: { maximum: 1000 }, allow_blank: true
   validates :url, length: { maximum: 255 }, allow_blank: true
 end
