@@ -6,7 +6,7 @@ class Tag < ApplicationRecord
   has_many :prompt_tags, dependent: :destroy
   
   validates :name, presence: true,
-                  length: { maximum: 21 },
+                  length: { maximum: 50 },
                   format: { without: /[;'"\\]|or\s+1=1/i, message: 'に無効な文字が含まれています' },
                   uniqueness: { scope: :prompt_id, message: 'は既に存在します' }
   validates :description, length: { maximum: 200 }
