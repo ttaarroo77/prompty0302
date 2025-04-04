@@ -1,0 +1,9 @@
+<div class="prompt">
+  <h2><%= truncate_title(prompt.title) %></h2>
+  <p><%= prompt.content %></p>
+  <div class="tags">
+    <% prompt.tags.each do |tag| %>
+      <span class="tag"><%= tag.name %></span>
+    <% end %>
+  </div>
+</div>

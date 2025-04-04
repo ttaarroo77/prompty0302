@@ -57,4 +57,24 @@ RSpec.describe Prompt, type: :model do
       end
     end
   end
+
+  describe 'バリデーション' do
+    it 'タイトルが15文字を超える場合は無効' do
+      prompt = build(:prompt, title: 'a' * 16, user: user)
+      expect(prompt).not_to be_valid
+      expect(prompt.errors[:title]).to include('は15文字以内で入力してください')
+    end
+
+    it 'タイトルが15文字以内の場合は有効' do
+      prompt = build(:prompt, title: 'a' * 15, user: user)
+      expect(prompt).to be_valid
+    end
+
+    it 'タグ名が21文字を超える場合は無効' do
+      prompt = create(:prompt, user: user)
+      tag = build(:tag, name: 'a' * 22, user: user, prompt: prompt)
+      expect(tag).not_to be_valid
+      expect(tag.errors[:name]).to include('は21文字以内で入力してください')
+    end
+  end
 end 
