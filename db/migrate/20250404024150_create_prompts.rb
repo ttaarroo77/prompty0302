@@ -1,9 +1,10 @@
 class CreatePrompts < ActiveRecord::Migration[7.1]
   def change
     create_table :prompts do |t|
-      t.string :title
-      t.string :url
-      t.text :description
+      t.string :title, null: false, limit: 15
+      t.text :content
+      t.text :notes
+      t.references :user, foreign_key: true
 
       t.timestamps
     end
