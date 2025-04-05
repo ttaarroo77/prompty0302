@@ -103,7 +103,7 @@
 
                   <div class="mb-2">
                     <% prompt.tags.each do |tag| %>
-                      <%= link_to prompts_path(tag: tag.name, sort: params[:sort], search: params[:search]), class: "badge bg-light text-dark text-decoration-none me-1" do %>
+                      <%= link_to prompts_path(tag: tag.name, sort: params[:sort], search: params[:search]), class: "prompt-tag text-decoration-none me-2" do %>
                         <%= tag.name %>
                       <% end %>
                     <% end %>
@@ -187,7 +187,7 @@
         </div>
         <div class="tag-cloud" style="max-height: 300px; overflow-y: auto;">
           <% @all_tags_for_display.each do |tag_name| %>
-            <%= link_to prompts_path(tag: tag_name, sort: params[:sort], search: params[:search]), class: "badge bg-light text-dark text-decoration-none me-1 mb-1 tag-item" do %>
+            <%= link_to prompts_path(tag: tag_name, sort: params[:sort], search: params[:search]), class: "text-decoration-none me-3 mb-2 d-inline-block tag-item" do %>
               <%= tag_name %>
               <span class="ms-1 text-secondary">(<%= @user_tags[tag_name] %>)</span>
             <% end %>

@@ -1,211 +1,150 @@
-<div class="content-container py-3 py-md-5">
-  <div class="row justify-content-center">
-    <!-- 親コンテナの幅を広くする -->
-    <div class="col-12">
-      <div class="row">
-        <!-- プロンプト詳細カード：PCでは左側（8カラム）、スマホでは全幅 -->
-        <div class="col-lg-8 mb-3 mb-lg-0">
-          <div class="card h-100" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #F8F9FA; border: none; padding: 1rem;">
-              <h1 class="h3 mb-0">プロンプト詳細</h1>
-              <div class="d-flex gap-2">
-                <button type="button" id="toggle-edit-mode" class="btn btn-outline-dark" style="min-height: 38px; min-width: 64px;">
-                  編集
-                </button>
-                <%= button_to "削除", prompt_path(@prompt), 
-                    method: :delete, 
-                    class: "btn btn-outline-danger", 
-                    form: { data: { turbo_confirm: "本当に削除しますか？" } }, 
-                    style: "min-height: 38px; min-width: 64px;" %>
+<div class="content-container mt-4">
+  <div id="flash-container"></div>
+  <div class="content-container py-3 py-md-5">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        <div class="row">
+          <div class="col-lg-8 mb-3 mb-lg-0">
+            <div class="card h-100" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #F8F9FA; border: none; padding: 1rem;">
+                <h1 class="h3 mb-0">プロンプト詳細</h1>
+                <div class="d-flex gap-2">
+                  <button id="edit-button" class="btn btn-outline-dark" style="min-height: 38px; min-width: 64px;">編集</button>
+                  <%= button_to '削除', prompt_path(@prompt), method: :delete, class: 'btn btn-outline-danger', style: 'min-height: 38px; min-width: 64px;', data: { turbo_confirm: '本当に削除しますか？' } %>
+                </div>
               </div>
-            </div>
-            
-            <!-- 表示モード -->
-            <div class="card-body p-3 p-md-4" id="view-mode">
-              <div class="mb-4">
-                <h4 class="h4 mb-3"><%= @prompt.title %></h4>
-                
-                <% if @prompt.url.present? %>
-                  <div class="mb-3">
-                    <label class="form-label text-muted mb-1">URL</label>
-                    <div class="overflow-auto">
-                      <%= link_to @prompt.url, @prompt.url, target: "_blank", class: "text-dark
-                       text-break" %>
+              <div class="card-body p-3 p-md-4">
+                <div id="prompt-content">
+                  <div class="mb-4">
+                    <h4 class="h4 mb-3"><%= @prompt.title %></h4>
+                    <div class="mb-3">
+                      <label class="form-label text-muted mb-1">URL</label>
+                      <div class="overflow-auto">
+                        <%= link_to @prompt.url, @prompt.url, target: '_blank', class: 'text-dark text-break' %>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label text-muted mb-1">説明</label>
+                      <div class="bg-white p-3 rounded">
+                        <%= simple_format @prompt.description %>
+                      </div>
                     </div>
                   </div>
-                <% end %>
-                
-                <div class="mb-3">
-                  <label class="form-label text-muted mb-1">説明</label>
-                  <div class="bg-white p-3 rounded"><%= simple_format(@prompt.description) %></div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 編集モード -->
-            <div class="card-body p-3 p-md-4" id="edit-mode" style="display: none;">
-              <%= form_with(model: @prompt, local: true, id: "edit-form") do |f| %>
-                <% if @prompt.errors.any? %>
-                  <div class="alert alert-danger">
-                    <ul class="mb-0">
-                      <% @prompt.errors.full_messages.each do |message| %>
-                        <li><%= message %></li>
-                      <% end %>
-                    </ul>
-                  </div>
-                <% end %>
-                
-                <div class="mb-3">
-                  <%= f.label :title, "タイトル", class: "form-label text-muted" %>
-                  <%= f.text_field :title, class: "form-control form-control-lg" %>
                 </div>
                 
-                <div class="mb-3">
-                  <%= f.label :url, "URL", class: "form-label text-muted" %>
-                  <%= f.url_field :url, class: "form-control", inputmode: "url" %>
-                </div>
-                
-                <div class="mb-3">
-                  <%= f.label :description, "説明", class: "form-label text-muted" %>
-                  <%= f.text_area :description, rows: 8, class: "form-control" %>
-                </div>
-                
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                  <button type="button" id="cancel-edit" class="btn btn-outline-secondary" style="min-height: 38px; min-width: 88px;">
-                    キャンセル
-                  </button>
-                  <%= f.submit "更新する", class: "btn btn-dark", style: "min-height: 38px; min-width: 88px;" %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        </div>
+                <div id="prompt-edit-form" style="display: none;">
+                  <%= form_with(model: @prompt, local: true, id: "inline-edit-form") do |f| %>
+                    <div class="mb-3">
+                      <%= f.label :title, "タイトル", class: "form-label text-muted" %>
+                      <%= f.text_field :title, class: "form-control form-control-lg" %>
+                    </div>
 
-        <!-- タグセクション：PCでは右側（4カラム）、スマホでは全幅 -->
-        <div class="col-lg-4">
-          <div class="card" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #F8F9FA; border: none; padding: 1rem;">
-              <h5 class="mb-0">タグ管理</h5>
-              <%= link_to prompt_path(@prompt, suggested: true), class: "btn btn-outline-dark d-inline-flex align-items-center gap-2", id: "suggest-tags-button", style: "min-height: 38px;" do %>
-                <i class="bi bi-magic"></i>
-                <span>AIタグを提案</span>
-              <% end %>
-            </div>
-            <div class="card-body p-3 p-md-4">
-              <!-- 既存のタグを表示 -->
-              <div class="mb-4">
-                <label class="form-label text-muted mb-2">現在のタグ</label>
-                <div class="d-flex flex-wrap gap-2">
-                  <% if @prompt.tags.present? %>
-                    <% @prompt.tags.each do |tag| %>
-                      <div class="tag-item d-flex align-items-center gap-1">
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
-                          <%= tag.name %>
-                        </span>
-                        <form action="<%= prompt_tag_path(@prompt, tag) %>" method="post" style="display: inline-block; margin: 0; padding: 0;">
-                          <input type="hidden" name="_method" value="delete">
-                          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                          <button type="submit" class="btn btn-sm text-danger tag-delete-btn" onclick="return confirm('このタグを削除してもよろしいですか？')">
-                            <i class="bi bi-x-circle"></i>
-                          </button>
-                        </form>
-                      </div>
-                    <% end %>
-                  <% else %>
-                    <p class="text-muted small">まだタグがありません。下のフォームから追加してください。</p>
+                    <div class="mb-3">
+                      <%= f.label :url, "URL", class: "form-label text-muted" %>
+                      <%= f.url_field :url, class: "form-control", inputmode: "url" %>
+                    </div>
+
+                    <div class="mb-3">
+                      <%= f.label :description, "説明", class: "form-label text-muted" %>
+                      <%= f.text_area :description, rows: 8, class: "form-control" %>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                      <button type="button" id="cancel-edit-button" class="btn btn-outline-secondary" style="min-height: 38px; min-width: 88px;">キャンセル</button>
+                      <%= f.submit "更新する", class: "btn btn-dark", style: "min-height: 38px; min-width: 88px;" %>
+                    </div>
                   <% end %>
                 </div>
               </div>
-
-              <!-- タグ追加フォーム -->
-              <%= form_with(model: [@prompt, Tag.new], id: "tag-form", class: "mb-4") do |f| %>
-                <label class="form-label text-muted mb-2">新しいタグを追加</label>
-                <div class="input-group">
-                  <%= f.text_field :name, placeholder: "タグ名を入力...", class: "form-control form-control-sm", autocomplete: "off", style: "min-height: 30px;", id: "tag-name-input" %>          
-                  <button type="submit" class="btn btn-dark d-inline-flex align-items-center gap-2" style="min-height: 38px;">
-                    <i class="bi bi-plus-lg"></i>
-                    <span>追加</span>
-                  </button>
-                </div>
-                
-                <div class="form-text">Enterキーで追加できます</div>
-              <% end %>
-              
-              <!-- タグ提案セクション -->
-              <div id="suggested-tags-container">
-                <label class="form-label text-muted mb-2">AIによるタグ提案</label>
-                <div id="suggested-tags">
-                  <div class="d-flex flex-wrap gap-2">
-                    <% if @suggested_tags.present? && @suggested_tags.any? %>
-                      <% @suggested_tags.each do |tag_suggestion| %>
-                        <button type="button" 
-                                class="btn btn-outline-dark suggested-tag-btn" 
-                                style="min-height: 38px;"
-                                data-tag-name="<%= tag_suggestion.name %>"
-                                data-tag-id="<%= tag_suggestion.id %>"
-                                data-bs-toggle="tooltip"
-                                title="クリックでタグを追加">
-                          <%= tag_suggestion.name %>
-                        </button>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #F8F9FA; border: none; padding: 1rem;">
+                <h5 class="mb-0">タグ管理</h5>
+                <%= link_to prompt_path(@prompt, suggested: true), class: 'btn btn-outline-dark d-inline-flex align-items-center gap-2', id: 'suggest-tags-button', style: 'min-height: 38px;' do %>
+                  <i class="bi bi-magic"></i>
+                  <span>AIタグを提案</span>
+                <% end %>
+              </div>
+              <div class="card-body p-3 p-md-4">
+                <div class="mb-4">
+                  <label class="form-label text-muted mb-2">現在のタグ</label>
+                  <div class="d-flex flex-wrap">
+                    <% if @prompt.tags.any? %>
+                      <% @prompt.tags.each do |tag| %>
+                        <div class="me-3 mb-2" style="display: inline-flex; align-items: center;">
+                          <span class="badge rounded-pill px-3 py-2" style="font-size: 14px; background-color: #f5f5f5; color: #212529;">
+                            <%= tag.name %>
+                          </span>
+                          <%= link_to prompt_tag_path(@prompt, tag), 
+                              data: { turbo_method: :delete, turbo_confirm: "タグ「#{tag.name}」を削除してもよろしいですか？" },
+                              class: "text-danger ms-1" do %>
+                            <i class="bi bi-x-circle"></i>
+                          <% end %>
+                        </div>
                       <% end %>
                     <% else %>
-                      <% default_tags = ["自己PR", "プロフィール", "ビジネス", "マーケティング", "ポートフォリオ", "実績", "デザイン"] %>
-                      <% default_tags.each_with_index do |tag, index| %>
-                        <button type="button" 
-                                class="btn btn-outline-dark suggested-tag-btn" 
-                                style="min-height: 38px;"
-                                data-tag-name="<%= tag %>"
-                                data-tag-id="<%= index + 1 %>"
-                                data-bs-toggle="tooltip"
-                                title="クリックでタグを追加">
-                          <%= tag %>
-                        </button>
+                      <p class="text-muted small">まだタグがありません。下のフォームから追加してください。</p>
+                    <% end %>
+                  </div>
+                </div>
+                <%= form_with(model: [@prompt, Tag.new], class: 'mb-4', id: 'tag-form') do |f| %>
+                  <label class="form-label text-muted mb-2">新しいタグを追加</label>
+                  <div class="input-group">
+                    <%= f.text_field :name, placeholder: 'タグ名を入力...', class: 'form-control form-control-sm', style: 'min-height: 30px;', autocomplete: 'off', id: 'tag-name-input', maxlength: 50 %>
+                    <button type="submit" class="btn btn-dark d-inline-flex align-items-center gap-2" style="min-height: 38px;">
+                      <i class="bi bi-plus-lg"></i>
+                      <span>追加</span>
+                    </button>
+                  </div>
+                  <div class="form-text">Enterキーで追加できます（50文字まで）</div>
+                <% end %>
+                <div id="suggested-tags-container">
+                  <label class="form-label text-muted mb-2">AIによるタグ提案</label>
+                  <div id="suggested-tags">
+                    <div class="d-flex flex-wrap gap-2">
+                      <% if @suggested_tags&.any? %>
+                        <% @suggested_tags.each do |tag| %>
+                          <button type="button" class="btn btn-outline-dark suggested-tag-btn" style="min-height: 38px;" data-tag-name="<%= tag.name %>" data-tag-id="<%= tag.id %>" data-bs-toggle="tooltip" title="クリックでタグを追加">
+                            <%= tag.name %>
+                          </button>
+                        <% end %>
+                      <% end %>
+                    </div>
+                    <div class="form-text mt-2">提案タグをクリックするとタグを追加できます</div>
+                  </div>
+                </div>
+                <% if @prompt.tags.any? %>
+                  <h6 class="my-3">タグ：</h6>
+                  <div class="d-flex flex-wrap gap-2">
+                    <% @prompt.tags.each do |tag| %>
+                      <%= link_to prompts_path(tag: tag.name), class: "prompt-tag text-decoration-none" do %>
+                        <%= tag.name %>
                       <% end %>
                     <% end %>
                   </div>
-                  <div class="form-text mt-2">提案タグをクリックするとタグを追加できます</div>
-                </div>
+                <% end %>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="d-grid d-md-block mt-3">
-        <%= link_to prompts_path, class: "btn btn-outline-secondary", style: "min-height: 38px;" do %>
-          <i class="bi bi-arrow-left"></i> 一覧に戻る
-        <% end %>
+        <div class="d-grid d-md-block mt-3">
+          <%= link_to prompts_path, class: 'btn btn-outline-secondary', style: 'min-height: 38px;' do %>
+            <i class="bi bi-arrow-left"></i>
+            一覧に戻る
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<script>
+<%= javascript_tag do %>
   document.addEventListener('DOMContentLoaded', function() {
-    // 編集モード切り替え
-    const toggleEditButton = document.getElementById('toggle-edit-mode');
-    const cancelEditButton = document.getElementById('cancel-edit');
-    const viewMode = document.getElementById('view-mode');
-    const editMode = document.getElementById('edit-mode');
-    
-    if (toggleEditButton && cancelEditButton && viewMode && editMode) {
-      toggleEditButton.addEventListener('click', function() {
-        viewMode.style.display = 'none';
-        editMode.style.display = 'block';
-        toggleEditButton.style.display = 'none';  // 編集モード時はボタンを非表示
-      });
-      
-      cancelEditButton.addEventListener('click', function() {
-        editMode.style.display = 'none';
-        viewMode.style.display = 'block';
-        toggleEditButton.style.display = 'inline-block';  // 表示モードに戻る時はボタンを表示
-        toggleEditButton.textContent = '編集';
-      });
-    }
-    
     // ツールチップの初期化
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     });
 
@@ -235,23 +174,91 @@
     document.querySelectorAll('.suggested-tag-btn').forEach(button => {
       button.addEventListener('click', function() {
         const tagName = this.getAttribute('data-tag-name');
-        console.log('選択されたタグ名:', tagName);
-        
-        // タグ名を入力フィールドにセット
         const tagInput = document.getElementById('tag-name-input');
         if (tagInput) {
           tagInput.value = tagName;
-          console.log('入力フィールドにセット:', tagInput.value);
-          
-          // フォームを取得して自動送信
           const form = document.getElementById('tag-form');
-          console.log('フォーム取得:', form ? 'OK' : 'NG');
-          
           if (form) {
             form.submit();
           }
         }
       });
     });
+
+    // インライン編集機能
+    const editButton = document.getElementById('edit-button');
+    const cancelEditButton = document.getElementById('cancel-edit-button');
+    const promptContent = document.getElementById('prompt-content');
+    const promptEditForm = document.getElementById('prompt-edit-form');
+    const inlineEditForm = document.getElementById('inline-edit-form');
+
+    if (editButton) {
+      editButton.addEventListener('click', function() {
+        promptContent.style.display = 'none';
+        promptEditForm.style.display = 'block';
+      });
+    }
+
+    if (cancelEditButton) {
+      cancelEditButton.addEventListener('click', function() {
+        promptContent.style.display = 'block';
+        promptEditForm.style.display = 'none';
+      });
+    }
+
+    if (inlineEditForm) {
+      inlineEditForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // フォームデータを取得してAjaxリクエストを送信
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+          method: 'PATCH',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          },
+          body: formData
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+          // 成功したら画面を更新（リロードなしで）
+          const titleElement = promptContent.querySelector('h4');
+          const urlElement = promptContent.querySelector('a.text-dark');
+          const descriptionElement = promptContent.querySelector('.bg-white.p-3');
+          
+          if (titleElement) titleElement.textContent = formData.get('prompt[title]');
+          if (urlElement) {
+            urlElement.textContent = formData.get('prompt[url]');
+            urlElement.href = formData.get('prompt[url]');
+          }
+          if (descriptionElement) descriptionElement.innerHTML = formData.get('prompt[description]').replace(/\n/g, '<br>');
+          
+          // 編集フォームを非表示に
+          promptContent.style.display = 'block';
+          promptEditForm.style.display = 'none';
+          
+          // 成功メッセージを表示
+          const flashContainer = document.getElementById('flash-container');
+          if (flashContainer) {
+            flashContainer.innerHTML = '<div class="alert alert-success alert-dismissible fade show" role="alert">プロンプトを更新しました<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // エラーメッセージを表示
+          const flashContainer = document.getElementById('flash-container');
+          if (flashContainer) {
+            flashContainer.innerHTML = '<div class="alert alert-danger alert-dismissible fade show" role="alert">更新に失敗しました<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+          }
+        });
+      });
+    }
   });
-</script>
+<% end %>

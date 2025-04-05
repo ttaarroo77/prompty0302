@@ -2,7 +2,7 @@
   <% if prompt.tags.any? %>
     <% prompt.tags.each do |tag| %>
       <div class="tag-item d-flex align-items-center gap-1">
-        <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 14px;">
+        <span class="badge rounded-pill px-3 py-2" style="font-size: 14px; background-color: #f5f5f5; color: #212529;">
           <%= tag.name %>
         </span>
         <%= button_to prompt_tag_path(prompt, tag), 
