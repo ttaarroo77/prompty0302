@@ -115,7 +115,8 @@ prompts_data = [
   {
     title: "テスト用プロンプト1",
     url: "https://test-prompt.example.com",
-    user_id: admin.id
+    user_id: admin.id,
+    tags: ["プログラミング", "AI"]
   }
 ]
 
@@ -126,6 +127,29 @@ prompts_data.each do |prompt_data|
     user_id: prompt_data[:user_id]
   )
   puts "プロンプトを作成しました: #{prompt.title}"
+
+  # タグの関連付け
+  prompt_data[:tags].each do |tag_name|
+    # タグが存在するか確認
+    tag = nil
+    if created_tags[admin.id][tag_name]
+      tag = created_tags[admin.id][tag_name]
+    else
+      # タグが存在しなければ作成
+      tag = Tag.find_or_initialize_by(name: tag_name, user_id: admin.id)
+      if tag.new_record?
+        tag.save!
+        puts "管理者用のタグを作成しました: #{tag.name}"
+        created_tags[admin.id][tag_name] = tag
+      end
+    end
+    
+    # タグとプロンプトを関連付け（既に関連付けられていなければ）
+    unless prompt.tags.include?(tag)
+      prompt.tags << tag
+      puts "タグ「#{tag.name}」をプロンプト「#{prompt.title}」に紐づけました"
+    end
+  end
 end
 
 # 山田太郎のプロンプトを作成
