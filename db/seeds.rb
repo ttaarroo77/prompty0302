@@ -1,12 +1,10 @@
 # AIモジュールを読み込む
-# require_relative '../app/models/ai/tag_suggestion'
 require_relative '../app/models/AI/tag_suggestion'
-
 
 # 既存のデータをリセット（オプション）
 if ENV['RESET_DATABASE'] == 'true'
   puts "既存のデータをリセットしています..."
-  AI::TagSuggestion.destroy_all # ここ、参照の問題・・大丈夫？？
+  AI::TagSuggestion.destroy_all
   Prompt.destroy_all
   Tag.destroy_all
   User.destroy_all
@@ -110,89 +108,8 @@ tanaka_tags_data.each do |tag_data|
   created_tags[user3.id][tag_data[:name]] = tag
 end
 
-# サンプルプロンプトの作成
-prompts_data = [
-  {
-    title: "テスト用プロンプト1",
-    url: "https://test-prompt.example.com",
-    user_id: admin.id,
-    tags: ["プログラミング", "AI"]
-  }
-]
-
-prompts_data.each do |prompt_data|
-  prompt = Prompt.create!(
-    title: prompt_data[:title],
-    url: prompt_data[:url],
-    user_id: prompt_data[:user_id]
-  )
-  puts "プロンプトを作成しました: #{prompt.title}"
-
-  # タグの関連付け
-  prompt_data[:tags].each do |tag_name|
-    # タグが存在するか確認
-    tag = nil
-    if created_tags[admin.id][tag_name]
-      tag = created_tags[admin.id][tag_name]
-    else
-      # タグが存在しなければ作成
-      tag = Tag.find_or_initialize_by(name: tag_name, user_id: admin.id)
-      if tag.new_record?
-        tag.save!
-        puts "管理者用のタグを作成しました: #{tag.name}"
-        created_tags[admin.id][tag_name] = tag
-      end
-    end
-    
-    # タグとプロンプトを関連付け（既に関連付けられていなければ）
-    unless prompt.tags.include?(tag)
-      prompt.tags << tag
-      puts "タグ「#{tag.name}」をプロンプト「#{prompt.title}」に紐づけました"
-    end
-  end
-end
-
-# 山田太郎のプロンプトを作成
-yamada_prompts_data = [
-  {
-    title: "週末の簡単レシピ",
-    url: "https://cooking.example.com/weekend-recipes",
-    user_id: user2.id,
-    tags: ["料理", "生活"]
-  }
-]
-
-# 田中花子のプロンプトを作成
-tanaka_prompts_data = [
-  {
-    title: "写真撮影のコツ",
-    url: "https://photo-tips.example.com/food",
-    user_id: user3.id,
-    tags: ["写真", "料理"]
-  },
-  {
-    title: "SNS投稿文の例",
-    url: "https://instagram.com/handmade_accessories",
-    user_id: user3.id,
-    tags: ["SNS", "マーケティング"]
-  },
-  {
-    title: "音楽プレイリスト作成",
-    url: "https://music-playlist.example.com/focus",
-    user_id: user3.id,
-    tags: ["音楽", "作業効率"]
-  },
-  {
-    title: "季節のインテリアアイデア",
-    url: "https://interior-design.example.com/autumn",
-    user_id: user3.id,
-    tags: ["生活", "デザイン"]
-  }
-]
-
-# 管理者のプロンプトを作成
-prompts_data.each do |prompt_data|
-  # 既存のプロンプトを探すか、新しく作成
+# プロンプトデータの作成
+def create_prompt_with_tags(prompt_data, user_tags, created_tags, admin_id)
   prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
   
   if prompt.nil?
@@ -205,45 +122,78 @@ prompts_data.each do |prompt_data|
   else
     puts "プロンプトが既に存在します: #{prompt.title}"
   end
-  
+
   # タグの関連付け
   prompt_data[:tags].each do |tag_name|
-    # タグが存在するか確認
     tag = nil
-    if created_tags[admin.id][tag_name]
-      tag = created_tags[admin.id][tag_name]
+    if created_tags[admin_id][tag_name]
+      tag = created_tags[admin_id][tag_name]
+    elsif user_tags.include?(tag_name)
+      tag = created_tags[prompt_data[:user_id]][tag_name]
     else
-      # タグが存在しなければ作成
-      tag = Tag.find_or_initialize_by(name: tag_name, user_id: admin.id)
-      if tag.new_record?
-        tag.save!
-        puts "管理者用のタグを作成しました: #{tag.name}"
-        created_tags[admin.id][tag_name] = tag
-      end
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: prompt_data[:user_id])
+      created_tags[prompt_data[:user_id]][tag_name] = tag
     end
-    
-    # タグとプロンプトを関連付け（既に関連付けられていなければ）
+
     unless prompt.tags.include?(tag)
       prompt.tags << tag
       puts "タグ「#{tag.name}」をプロンプト「#{prompt.title}」に紐づけました"
     end
   end
+
+  prompt
+end
+
+# 管理者のプロンプト
+admin_prompts = [
+  {
+    title: "テスト用プロンプト1",
+    url: "https://test-prompt.example.com",
+    user_id: admin.id,
+    tags: ["プログラミング", "AI"]
+  }
+]
+
+# 山田太郎のプロンプト
+yamada_prompts = [
+  {
+    title: "週末の簡単レシピ",
+    url: "https://cooking.example.com/weekend-recipes",
+    user_id: user2.id,
+    tags: ["料理", "生活"]
+  }
+]
+
+# 田中花子のプロンプト
+tanaka_prompts = [
+  {
+    title: "写真撮影のコツ",
+    url: "https://photo-tips.example.com/food",
+    user_id: user3.id,
+    tags: ["写真", "料理"]
+  },
+  {
+    title: "SNS投稿文の例",
+    url: "https://instagram.com/handmade_accessories",
+    user_id: user3.id,
+    tags: ["SNS", "マーケティング"]
+  }
+]
+
+# プロンプトの作成
+admin_prompts.each do |prompt_data|
+  prompt = create_prompt_with_tags(prompt_data, [], created_tags, admin.id)
   
   # AIタグ提案の作成
   ai_tags = [
     { name: "自己PR", confidence_score: 0.9 },
     { name: "プロフィール", confidence_score: 0.8 },
-    { name: "ビジネス", confidence_score: 0.7 },
-    { name: "マーケティング", confidence_score: 0.6 },
-    { name: "ポートフォリオ", confidence_score: 0.5 },
-    { name: "実績", confidence_score: 0.4 },
-    { name: "デザイン", confidence_score: 0.3 }
+    { name: "ビジネス", confidence_score: 0.7 }
   ]
-  
-  # タグ提案をクリアして新しいものを作成
+
   AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
-  ai_tags.sample(3).each do |tag_data|
+  ai_tags.each do |tag_data|
     AI::TagSuggestion.create!(
       prompt_id: prompt.id,
       name: tag_data[:name],
@@ -254,58 +204,20 @@ prompts_data.each do |prompt_data|
   end
 end
 
-# 山田太郎のプロンプトを作成
-yamada_prompts_data.each do |prompt_data|
-  prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
-  
-  if prompt.nil?
-    prompt = Prompt.create!(
-      title: prompt_data[:title],
-      url: prompt_data[:url],
-      user_id: prompt_data[:user_id]
-    )
-    puts "山田太郎のプロンプトを作成しました: #{prompt.title}"
-  else
-    puts "山田太郎のプロンプトが既に存在します: #{prompt.title}"
-  end
-  
-  prompt_data[:tags].each do |tag_name|
-    # タグが存在するか確認
-    tag = nil
-    
-    # 共有タグかどうかを判断
-    if shared_tags.include?(tag_name)
-      # 共有タグ（管理者のタグ）を使用
-      tag = created_tags[admin.id][tag_name]
-    elsif ["旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
-      # 山田太郎のタグ
-      tag = Tag.find_or_create_by!(name: tag_name, user_id: user2.id)
-      created_tags[user2.id][tag_name] = tag
-    else
-      # その他のタグは管理者のタグとして作成
-      tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
-      created_tags[admin.id][tag_name] = tag
-    end
-    
-    unless prompt.tags.include?(tag)
-      prompt.tags << tag
-      puts "タグ「#{tag.name}」を山田太郎のプロンプト「#{prompt.title}」に紐づけました"
-    end
-  end
+# 山田太郎のプロンプト作成
+yamada_prompts.each do |prompt_data|
+  prompt = create_prompt_with_tags(prompt_data, yamada_tags_data.map { |t| t[:name] }, created_tags, admin.id)
   
   # AIタグ提案
   yamada_ai_tags = [
     { name: "レシピ", confidence_score: 0.9 },
-    { name: "旅行プラン", confidence_score: 0.85 },
     { name: "健康管理", confidence_score: 0.8 },
-    { name: "フィットネス", confidence_score: 0.75 },
-    { name: "ライフスタイル", confidence_score: 0.7 },
-    { name: "創作", confidence_score: 0.65 }
+    { name: "ライフスタイル", confidence_score: 0.7 }
   ]
-  
+
   AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
-  yamada_ai_tags.sample(3).each do |tag_data|
+  yamada_ai_tags.each do |tag_data|
     AI::TagSuggestion.create!(
       prompt_id: prompt.id,
       name: tag_data[:name],
@@ -316,63 +228,20 @@ yamada_prompts_data.each do |prompt_data|
   end
 end
 
-# 田中花子のプロンプトを作成
-tanaka_prompts_data.each do |prompt_data|
-  prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
-  
-  if prompt.nil?
-    prompt = Prompt.create!(
-      title: prompt_data[:title],
-      url: prompt_data[:url],
-      user_id: prompt_data[:user_id]
-    )
-    puts "田中花子のプロンプトを作成しました: #{prompt.title}"
-  else
-    puts "田中花子のプロンプトが既に存在します: #{prompt.title}"
-  end
-  
-  prompt_data[:tags].each do |tag_name|
-    # タグが存在するか確認
-    tag = nil
-    
-    # 共有タグかどうかを判断
-    if shared_tags.include?(tag_name)
-      # 共有タグ（管理者のタグ）を使用
-      tag = created_tags[admin.id][tag_name]
-    elsif ["イラスト", "写真", "音楽", "SNS"].include?(tag_name)
-      # 田中花子のタグ
-      tag = Tag.find_or_create_by!(name: tag_name, user_id: user3.id)
-      created_tags[user3.id][tag_name] = tag
-    elsif ["旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
-      # 山田太郎のタグ
-      tag = Tag.find_or_create_by!(name: tag_name, user_id: user2.id)
-      created_tags[user2.id][tag_name] = tag
-    else
-      # その他のタグは管理者のタグとして作成
-      tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
-      created_tags[admin.id][tag_name] = tag
-    end
-    
-    unless prompt.tags.include?(tag)
-      prompt.tags << tag
-      puts "タグ「#{tag.name}」を田中花子のプロンプト「#{prompt.title}」に紐づけました"
-    end
-  end
+# 田中花子のプロンプト作成
+tanaka_prompts.each do |prompt_data|
+  prompt = create_prompt_with_tags(prompt_data, tanaka_tags_data.map { |t| t[:name] }, created_tags, admin.id)
   
   # AIタグ提案
   tanaka_ai_tags = [
-    { name: "クリエイティブ", confidence_score: 0.95 },
-    { name: "アート", confidence_score: 0.9 },
-    { name: "写真撮影", confidence_score: 0.85 },
-    { name: "インスピレーション", confidence_score: 0.8 },
-    { name: "デジタル", confidence_score: 0.75 },
-    { name: "ソーシャルメディア", confidence_score: 0.7 },
-    { name: "インテリア", confidence_score: 0.65 }
+    { name: "クリエイティブ", confidence_score: 0.9 },
+    { name: "アート", confidence_score: 0.8 },
+    { name: "インスピレーション", confidence_score: 0.7 }
   ]
-  
+
   AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
   
-  tanaka_ai_tags.sample(3).each do |tag_data|
+  tanaka_ai_tags.each do |tag_data|
     AI::TagSuggestion.create!(
       prompt_id: prompt.id,
       name: tag_data[:name],
@@ -382,41 +251,5 @@ tanaka_prompts_data.each do |prompt_data|
     puts "田中花子のプロンプト用AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
   end
 end
-
-# 既存のプロンプトにタグを追加
-puts "既存のプロンプトにタグを付けています..."
-
-# まず既存のタグを取得
-all_tags = Tag.all
-tag_names = all_tags.pluck(:name).uniq
-puts "利用可能なタグ: #{tag_names.join(', ')}"
-
-# 内容に基づいてタグを選択するヘルパーメソッド
-def select_relevant_tags(prompt, available_tags)
-  title_text = prompt.title.downcase
-  
-  available_tags.select do |tag|
-    keywords = tag.name.downcase.split
-    keywords.any? { |keyword| title_text.include?(keyword) }
-  end
-end
-
-# 既存のプロンプトを取得してタグを付ける
-Prompt.all.each do |prompt|
-  # プロンプトの内容に基づいて関連するタグを選択
-  available_tags = Tag.where(user_id: prompt.user_id).to_a
-  selected_tags = select_relevant_tags(prompt, available_tags)
-  
-  # タグを関連付け
-  selected_tags.each do |tag|
-    # 既存の関連付けを避ける
-    next if Tagging.exists?(prompt_id: prompt.id, tag_id: tag.id)
-    
-    Tagging.create!(prompt_id: prompt.id, tag_id: tag.id)
-    puts "プロンプト「#{prompt.title}」にタグ「#{tag.name}」を追加しました。"
-  end
-end
-
-puts "タグ付けが完了しました。"
 
 puts "シードの作成が完了しました！"
