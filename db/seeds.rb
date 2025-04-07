@@ -78,33 +78,35 @@ created_tags = {
   user3.id => {}
 }
 
+# 共有タグを作成（管理者のタグ）
+shared_tags = ["生活", "料理", "マーケティング", "デザイン"]
+shared_tags.each do |tag_name|
+  tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
+  puts "共有タグを作成しました: #{tag.name}"
+  created_tags[admin.id][tag_name] = tag
+end
+
 # 管理者のタグを作成
 tags_data.each do |tag_data|
-  tag = Tag.find_or_initialize_by(name: tag_data[:name], user_id: tag_data[:user_id])
-  if tag.new_record?
-    tag.save!
-    puts "タグを作成しました: #{tag.name}"
-  end
+  next if shared_tags.include?(tag_data[:name])
+  tag = Tag.find_or_create_by!(name: tag_data[:name], user_id: tag_data[:user_id])
+  puts "タグを作成しました: #{tag.name}"
   created_tags[admin.id][tag_data[:name]] = tag
 end
 
 # 山田太郎のタグを作成
 yamada_tags_data.each do |tag_data|
-  tag = Tag.find_or_initialize_by(name: tag_data[:name], user_id: tag_data[:user_id])
-  if tag.new_record?
-    tag.save!
-    puts "山田太郎のタグを作成しました: #{tag.name}"
-  end
+  next if shared_tags.include?(tag_data[:name])
+  tag = Tag.find_or_create_by!(name: tag_data[:name], user_id: tag_data[:user_id])
+  puts "山田太郎のタグを作成しました: #{tag.name}"
   created_tags[user2.id][tag_data[:name]] = tag
 end
 
 # 田中花子のタグを作成
 tanaka_tags_data.each do |tag_data|
-  tag = Tag.find_or_initialize_by(name: tag_data[:name], user_id: tag_data[:user_id])
-  if tag.new_record?
-    tag.save!
-    puts "田中花子のタグを作成しました: #{tag.name}"
-  end
+  next if shared_tags.include?(tag_data[:name])
+  tag = Tag.find_or_create_by!(name: tag_data[:name], user_id: tag_data[:user_id])
+  puts "田中花子のタグを作成しました: #{tag.name}"
   created_tags[user3.id][tag_data[:name]] = tag
 end
 
@@ -112,143 +114,54 @@ end
 prompts_data = [
   {
     title: "テスト用プロンプト1",
-    description: "これはテスト用のプロンプトです。AIに対する指示例として使用できます。",
-    user_id: admin.id,
     url: "https://test-prompt.example.com",
-    tags: ["AI", "テスト"]
-  },
-  {
-    title: "レポート作成プロンプト",
-    description: "以下のトピックについて、最新の研究結果を含めた500字のレポートを作成してください。トピック：人工知能の倫理的課題",
-    user_id: admin.id,
-    url: "https://report-writing.example.com/ai-ethics",
-    tags: ["AI", "レポート", "研究"]
-  },
-  {
-    title: "コード生成プロンプト",
-    description: "以下の仕様に基づいてRailsのコントローラを作成してください。モデル名：Product、アクション：index, show, new, create, edit, update, destroy",
-    user_id: admin.id,
-    url: "https://code-generator.example.com/rails",
-    tags: ["プログラミング", "AI"]
-  },
-  {
-    title: "自己PR文の作成",
-    description: "私は情報技術分野で5年の経験があり、特にRuby on Railsとフロントエンド開発に強みがあります。チーム開発やアジャイル手法にも慣れています。これらの経験と技術を生かして、御社のプロダクト開発にどのように貢献できるかを、300字程度でまとめてください。",
-    user_id: admin.id,
-    url: "https://example.com/portfolio",
-    tags: ["自己PR", "ビジネス"]
-  },
-  {
-    title: "マーケティング戦略提案",
-    description: "新規サービスのマーケティング戦略を考えています。ターゲットは20代から30代の働く女性で、時短料理キットのサブスクリプションサービスです。SNSを活用した効果的なマーケティング施策を5つ提案してください。",
-    user_id: admin.id,
-    url: "https://marketing-strategy.example.com/subscription",
-    tags: ["マーケティング", "ビジネス"]
-  },
-  {
-    title: "ウェブデザインのアイデア",
-    description: "ミニマルで洗練されたポートフォリオサイトのデザインを考えています。白を基調とし、アクセントカラーとして青と緑を使用する場合のレイアウトと色使いについてアドバイスをください。",
-    user_id: admin.id,
-    url: "https://web-design.example.com/portfolio",
-    tags: ["デザイン", "ポートフォリオ"]
-  },
-  {
-    title: "数学の問題解説プロンプト",
-    description: "高校生向けに、二次方程式の解の公式について、わかりやすく説明してください。導出過程も含め、具体例を挙げて説明してください。",
-    user_id: admin.id,
-    url: "https://math-education.example.com/quadratic",
-    tags: ["教育", "数学"]
-  },
-  {
-    title: "研究論文の要約",
-    description: "以下の論文の要約を200字程度で作成してください。キーポイントと主な発見を中心にまとめてください。[論文タイトル: AIを活用した教育手法の最新動向]",
-    user_id: admin.id,
-    url: "https://research-summary.example.com/ai-education",
-    tags: ["研究", "AI", "教育"]
-  },
-  {
-    title: "英語学習用会話シナリオ",
-    description: "カフェでの注文を題材にした英会話のシナリオを作成してください。初級者向けで、基本的な挨拶、注文、お礼などを含めてください。各フレーズには日本語訳も付けてください。",
-    user_id: admin.id,
-    url: "https://english-learning.example.com/cafe-conversation",
-    tags: ["教育", "英語", "会話"]
-  },
-  {
-    title: "プレゼンテーション資料作成",
-    description: "「デジタルトランスフォーメーションの課題と解決策」というテーマでプレゼンテーション資料を作成しています。10枚のスライドの構成と、各スライドの要点をまとめてください。",
-    user_id: admin.id,
-    url: "https://presentation.example.com/digital-transformation",
-    tags: ["ビジネス", "プレゼンテーション"]
+    user_id: admin.id
   }
 ]
 
-# 山田太郎のプロンプト
+prompts_data.each do |prompt_data|
+  prompt = Prompt.create!(
+    title: prompt_data[:title],
+    url: prompt_data[:url],
+    user_id: prompt_data[:user_id]
+  )
+  puts "プロンプトを作成しました: #{prompt.title}"
+end
+
+# 山田太郎のプロンプトを作成
 yamada_prompts_data = [
   {
     title: "週末の簡単レシピ",
-    description: "20分以内で作れる、料理初心者向けの週末夕食レシピを5つ提案してください。和食中心で、食材は一般的なスーパーで手に入るものを使用してください。",
+    url: "https://cooking.example.com/weekend-recipes",
     user_id: user2.id,
-    url: "https://recipe-example.com/weekend",
-    tags: ["料理", "健康", "家庭料理"]
-  },
-  {
-    title: "国内旅行計画",
-    description: "京都への2泊3日の旅行プランを立ててください。主な観光スポット、おすすめの食事処、宿泊施設の提案を含めてください。公共交通機関を使った移動を前提としています。",
-    user_id: user2.id,
-    url: "https://kyoto-travel.com",
-    tags: ["旅行", "エンタメ"]
-  },
-  {
-    title: "ブログ投稿アイデア",
-    description: "健康とフィットネスに関するブログを運営しています。次の1ヶ月間で投稿する記事のアイデアを10個提案してください。各アイデアには簡単な概要も含めてください。",
-    user_id: user2.id,
-    url: "https://blog-ideas.com/fitness",
-    tags: ["ブログ", "健康", "文章作成"]
-  },
-  {
-    title: "短編小説のプロット",
-    description: "現代を舞台にした3000字程度の短編ミステリー小説のプロットを考えてください。主人公は30代の女性会社員で、通勤途中に不思議な出来事に遭遇するという設定です。",
-    user_id: user2.id,
-    url: "https://short-story.example.com/mystery",
-    tags: ["小説", "エンタメ"]
+    tags: ["料理", "生活"]
   }
 ]
 
-# 田中花子のプロンプト
+# 田中花子のプロンプトを作成
 tanaka_prompts_data = [
   {
-    title: "イラスト作成のアイデア",
-    description: "季節をテーマにしたイラスト集を作成しています。夏をテーマにした5つのイラストアイデアを提案してください。それぞれ簡単な構図の説明を含めてください。",
-    user_id: user3.id,
-    url: "https://illustration-ideas.com/seasonal",
-    tags: ["イラスト", "デザイン"]
-  },
-  {
-    title: "写真撮影のテクニック",
-    description: "スマートフォンでプロフェッショナルな料理写真を撮影するためのテクニックを教えてください。照明、構図、角度などの観点から詳しく説明してください。",
-    user_id: user3.id,
+    title: "写真撮影のコツ",
     url: "https://photo-tips.example.com/food",
+    user_id: user3.id,
     tags: ["写真", "料理"]
   },
   {
     title: "SNS投稿文の例",
-    description: "新しく始めた手作りアクセサリーショップのInstagramアカウント用の投稿文を5つ作成してください。商品の魅力を伝え、フォロワーの関心を引くような内容にしてください。ハッシュタグも含めてください。",
-    user_id: user3.id,
     url: "https://instagram.com/handmade_accessories",
+    user_id: user3.id,
     tags: ["SNS", "マーケティング"]
   },
   {
     title: "音楽プレイリスト作成",
-    description: "集中して作業するための3時間のプレイリストを提案してください。ジャンルは問いませんが、歌詞のないインストゥルメンタル曲を中心にしてください。各曲の簡単な説明も含めてください。",
-    user_id: user3.id,
     url: "https://music-playlist.example.com/focus",
+    user_id: user3.id,
     tags: ["音楽", "作業効率"]
   },
   {
     title: "季節のインテリアアイデア",
-    description: "秋を感じる部屋のインテリアアイデアを提案してください。少ない予算で実現できる、色使いや小物の配置などのアイデアを5つ以上挙げてください。",
-    user_id: user3.id,
     url: "https://interior-design.example.com/autumn",
+    user_id: user3.id,
     tags: ["生活", "デザイン"]
   }
 ]
@@ -259,10 +172,8 @@ prompts_data.each do |prompt_data|
   prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
   
   if prompt.nil?
-    # 新規作成の場合
     prompt = Prompt.create!(
       title: prompt_data[:title],
-      description: prompt_data[:description],
       url: prompt_data[:url],
       user_id: prompt_data[:user_id]
     )
@@ -326,7 +237,6 @@ yamada_prompts_data.each do |prompt_data|
   if prompt.nil?
     prompt = Prompt.create!(
       title: prompt_data[:title],
-      description: prompt_data[:description],
       url: prompt_data[:url],
       user_id: prompt_data[:user_id]
     )
@@ -339,31 +249,18 @@ yamada_prompts_data.each do |prompt_data|
     # タグが存在するか確認
     tag = nil
     
-    # ユーザー固有のタグか共有タグかを判断
-    if ["料理", "旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
+    # 共有タグかどうかを判断
+    if shared_tags.include?(tag_name)
+      # 共有タグ（管理者のタグ）を使用
+      tag = created_tags[admin.id][tag_name]
+    elsif ["旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
       # 山田太郎のタグ
-      if created_tags[user2.id][tag_name]
-        tag = created_tags[user2.id][tag_name]
-      else
-        tag = Tag.find_or_initialize_by(name: tag_name, user_id: user2.id)
-        if tag.new_record?
-          tag.save!
-          puts "山田太郎用のタグを作成しました: #{tag.name}"
-          created_tags[user2.id][tag_name] = tag
-        end
-      end
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: user2.id)
+      created_tags[user2.id][tag_name] = tag
     else
-      # 共有タグ（管理者のタグ）
-      if created_tags[admin.id][tag_name]
-        tag = created_tags[admin.id][tag_name]
-      else
-        tag = Tag.find_or_initialize_by(name: tag_name, user_id: admin.id)
-        if tag.new_record?
-          tag.save!
-          puts "管理者用のタグを作成しました: #{tag.name}"
-          created_tags[admin.id][tag_name] = tag
-        end
-      end
+      # その他のタグは管理者のタグとして作成
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
+      created_tags[admin.id][tag_name] = tag
     end
     
     unless prompt.tags.include?(tag)
@@ -402,7 +299,6 @@ tanaka_prompts_data.each do |prompt_data|
   if prompt.nil?
     prompt = Prompt.create!(
       title: prompt_data[:title],
-      description: prompt_data[:description],
       url: prompt_data[:url],
       user_id: prompt_data[:user_id]
     )
@@ -415,43 +311,22 @@ tanaka_prompts_data.each do |prompt_data|
     # タグが存在するか確認
     tag = nil
     
-    # ユーザー固有のタグか共有タグかを判断
-    if ["イラスト", "写真", "音楽", "SNS", "生活"].include?(tag_name)
+    # 共有タグかどうかを判断
+    if shared_tags.include?(tag_name)
+      # 共有タグ（管理者のタグ）を使用
+      tag = created_tags[admin.id][tag_name]
+    elsif ["イラスト", "写真", "音楽", "SNS"].include?(tag_name)
       # 田中花子のタグ
-      if created_tags[user3.id][tag_name]
-        tag = created_tags[user3.id][tag_name]
-      else
-        tag = Tag.find_or_initialize_by(name: tag_name, user_id: user3.id)
-        if tag.new_record?
-          tag.save!
-          puts "田中花子用のタグを作成しました: #{tag.name}"
-          created_tags[user3.id][tag_name] = tag
-        end
-      end
-    elsif ["料理", "旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: user3.id)
+      created_tags[user3.id][tag_name] = tag
+    elsif ["旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
       # 山田太郎のタグ
-      if created_tags[user2.id][tag_name]
-        tag = created_tags[user2.id][tag_name]
-      else
-        tag = Tag.find_or_initialize_by(name: tag_name, user_id: user2.id)
-        if tag.new_record?
-          tag.save!
-          puts "山田太郎用のタグを作成しました: #{tag.name}"
-          created_tags[user2.id][tag_name] = tag
-        end
-      end
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: user2.id)
+      created_tags[user2.id][tag_name] = tag
     else
-      # 共有タグ（管理者のタグ）
-      if created_tags[admin.id][tag_name]
-        tag = created_tags[admin.id][tag_name]
-      else
-        tag = Tag.find_or_initialize_by(name: tag_name, user_id: admin.id)
-        if tag.new_record?
-          tag.save!
-          puts "管理者用のタグを作成しました: #{tag.name}"
-          created_tags[admin.id][tag_name] = tag
-        end
-      end
+      # その他のタグは管理者のタグとして作成
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
+      created_tags[admin.id][tag_name] = tag
     end
     
     unless prompt.tags.include?(tag)
@@ -483,5 +358,41 @@ tanaka_prompts_data.each do |prompt_data|
     puts "田中花子のプロンプト用AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
   end
 end
+
+# 既存のプロンプトにタグを追加
+puts "既存のプロンプトにタグを付けています..."
+
+# まず既存のタグを取得
+all_tags = Tag.all
+tag_names = all_tags.pluck(:name).uniq
+puts "利用可能なタグ: #{tag_names.join(', ')}"
+
+# 内容に基づいてタグを選択するヘルパーメソッド
+def select_relevant_tags(prompt, available_tags)
+  title_text = prompt.title.downcase
+  
+  available_tags.select do |tag|
+    keywords = tag.name.downcase.split
+    keywords.any? { |keyword| title_text.include?(keyword) }
+  end
+end
+
+# 既存のプロンプトを取得してタグを付ける
+Prompt.all.each do |prompt|
+  # プロンプトの内容に基づいて関連するタグを選択
+  available_tags = Tag.where(user_id: prompt.user_id).to_a
+  selected_tags = select_relevant_tags(prompt, available_tags)
+  
+  # タグを関連付け
+  selected_tags.each do |tag|
+    # 既存の関連付けを避ける
+    next if Tagging.exists?(prompt_id: prompt.id, tag_id: tag.id)
+    
+    Tagging.create!(prompt_id: prompt.id, tag_id: tag.id)
+    puts "プロンプト「#{prompt.title}」にタグ「#{tag.name}」を追加しました。"
+  end
+end
+
+puts "タグ付けが完了しました。"
 
 puts "シードの作成が完了しました！"
