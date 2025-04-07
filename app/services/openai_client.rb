@@ -15,7 +15,7 @@ class OpenaiClient
   def generate_tag_suggestions(prompt, existing_tags, user_tags = [])
     # プロンプトの内容を取得
     title = prompt.title.to_s
-    description = prompt.description.to_s
+    notes = prompt.notes.to_s
     url = prompt.url.to_s
     current_tags = prompt.tags.pluck(:name).join(", ")
     
@@ -30,7 +30,7 @@ class OpenaiClient
       
       【プロンプト情報】
       タイトル: #{title}
-      説明: #{description}
+      メモ: #{notes}
       #{"URL: #{url}" if url.present?}
       #{"現在のタグ: #{current_tags}" if current_tags.present?}
       

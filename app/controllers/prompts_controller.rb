@@ -14,7 +14,7 @@ class PromptsController < ApplicationController
       
       # IDでフィルタリングする方法を使用
       title_desc_ids = Prompt.where(user_id: current_user.id)
-                            .where("title LIKE ? OR description LIKE ?", search_term, search_term)
+                            .where("title LIKE ? OR notes LIKE ?", search_term, search_term)
                             .pluck(:id)
       
       tag_ids = Prompt.where(user_id: current_user.id)
@@ -76,17 +76,28 @@ class PromptsController < ApplicationController
     
     # ユーザーに関連するタグを取得
     user_prompt_ids = Prompt.where(user_id: current_user.id).pluck(:id)
+    Rails.logger.debug "User prompt IDs: #{user_prompt_ids.inspect}"
     
-    # ユーザーのプロンプトに紐づくタグを取得
+    # ユーザーのプロンプトに紐づくタグを取得（taggings経由）
     tags_with_count = Tag.joins(:taggings)
                          .where(taggings: { prompt_id: user_prompt_ids })
-                         .group(:name)
-                         .count
+                         .select("tags.name, COUNT(taggings.id) as count")
+                         .group("tags.name")
+                         .order("count DESC")
+    Rails.logger.debug "Tags with count: #{tags_with_count.inspect}"
     
     # タグの表示用データを準備
-    @user_tags = tags_with_count
-    @all_tags_for_display = @user_tags.keys
+    @user_tags = {}
+    @all_tags_for_display = []
+    
+    tags_with_count.each do |tag|
+      @user_tags[tag.name] = tag.count
+      @all_tags_for_display << tag.name
+    end
+    
     @total_tag_count = @all_tags_for_display.size
+    Rails.logger.debug "All tags for display: #{@all_tags_for_display.inspect}"
+    Rails.logger.debug "Total tag count: #{@total_tag_count}"
     
     # 現在の検索条件
     @search_filters = {
@@ -165,7 +176,11 @@ class PromptsController < ApplicationController
           tags = params[:tags].split(',').map(&:strip)
           tags.each do |tag_name|
             next if tag_name.blank?
-            tag = Tag.find_or_create_by(name: tag_name)
+            tag = Tag.find_or_initialize_by(name: tag_name)
+            if tag.new_record?
+              tag.user = current_user
+              tag.save
+            end
             Tagging.create(prompt: @prompt, tag: tag)
           end
         end
@@ -191,16 +206,32 @@ class PromptsController < ApplicationController
           tags = params[:tags].split(',').map(&:strip)
           tags.each do |tag_name|
             next if tag_name.blank?
-            tag = Tag.find_or_create_by(name: tag_name)
+            tag = Tag.find_or_initialize_by(name: tag_name)
+            if tag.new_record?
+              tag.user = current_user
+              tag.save
+            end
             Tagging.create(prompt: @prompt, tag: tag)
           end
         end
         
         format.html { redirect_to @prompt, notice: 'プロンプトを更新しました' }
-        format.json { render :show, status: :ok, location: @prompt }
+        format.json { 
+          render json: { 
+            success: true, 
+            prompt: { 
+              id: @prompt.id,
+              title: @prompt.title,
+              notes: @prompt.notes,
+              url: @prompt.url,
+              tags: @prompt.tags.map { |tag| { id: tag.id, name: tag.name } }
+            }, 
+            message: 'プロンプトを更新しました' 
+          }, status: :ok 
+        }
       else
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @prompt.errors, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @prompt.errors.full_messages }, status: :unprocessable_entity }
       end
     end
   end
@@ -226,6 +257,6 @@ class PromptsController < ApplicationController
   end
 
   def prompt_params
-    params.require(:prompt).permit(:title, :description, :content, :notes, :url)
+    params.require(:prompt).permit(:title, :content, :notes, :url)
   end
 end

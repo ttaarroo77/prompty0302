@@ -1,0 +1,60 @@
+<div class="content-container py-3 py-md-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card h-100" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #F8F9FA; border: none;">
+          <h4 class="mb-0">プロンプトを作成</h4>
+        </div>
+        <div class="card-body">
+          <%= render 'form', prompt: @prompt %>
+        </div>
+        <div class="card-footer" style="background-color: #F8F9FA; border: none;">
+          <%= link_to prompts_path, class: "btn btn-outline-secondary d-flex align-items-center gap-1", style: "min-height: 38px; width: fit-content;" do %>
+            <i class="bi bi-arrow-left"></i> 一覧に戻る
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card" style="background-color: #F8F9FA; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #F8F9FA; border: none;">
+          <h4 class="mb-0">タグ管理</h4>
+          <%= link_to "AIタグを提案", suggest_tags_prompt_path(@prompt), class: "btn btn-outline-dark d-flex align-items-center gap-1", style: "min-height: 38px;" if @prompt.persisted? %>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label text-muted">現在のタグ</label>
+            <div id="current-tags" class="mb-3">
+              <% if @prompt.tags.empty? %>
+                <p class="text-muted mb-0">まだタグがありません。下のフォームから追加してください。</p>
+              <% else %>
+                <% @prompt.tags.each do |tag| %>
+                  <span class="badge bg-primary me-1 mb-1">
+                    <%= tag.name %>
+                    <%= link_to tag_path(tag), 
+                        data: { turbo_method: :delete, turbo_confirm: "タグ「#{tag.name}」を削除してもよろしいですか？" },
+                        class: "text-white text-decoration-none tag-delete-btn" do %>
+                      <i class="bi bi-x"></i>
+                    <% end %>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label text-muted">新しいタグを追加</label>
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="タグ名を入力..." id="new-tag-input">
+              <button class="btn btn-dark" type="button" id="add-tag-btn">
+                追加
+              </button>
+            </div>
+            <div class="form-text">Enterキーでも追加できます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

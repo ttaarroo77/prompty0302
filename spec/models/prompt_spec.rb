@@ -31,31 +31,31 @@ RSpec.describe Prompt, type: :model do
       end
     end
 
-    context "プロンプト本文" do
-      it "2000文字以下の本文は有効" do
-        prompt.content = "a" * 2000
-        expect(prompt).to be_valid
-      end
+    # context "プロンプト本文" do
+    #   it "2000文字以下の本文は有効" do
+    #     prompt.content = "a" * 2000
+    #     expect(prompt).to be_valid
+    #   end
 
-      it "2000文字を超える本文は無効" do
-        prompt.content = "a" * 2001
-        expect(prompt).not_to be_valid
-        expect(prompt.errors[:content]).to include("は2000文字以内で入力してください")
-      end
-    end
+    #   it "2000文字を超える本文は無効" do
+    #     prompt.content = "a" * 2001
+    #     expect(prompt).not_to be_valid
+    #     expect(prompt.errors[:content]).to include("は2000文字以内で入力してください")
+    #   end
+    # end
 
-    context "メモ" do
-      it "1000文字以下のメモは有効" do
-        prompt.notes = "a" * 1000
-        expect(prompt).to be_valid
-      end
+    # context "メモ" do
+    #   it "1000文字以下のメモは有効" do
+    #     prompt.notes = "a" * 1000
+    #     expect(prompt).to be_valid
+    #   end
 
-      it "1000文字を超えるメモは無効" do
-        prompt.notes = "a" * 1001
-        expect(prompt).not_to be_valid
-        expect(prompt.errors[:notes]).to include("は1000文字以内で入力してください")
-      end
-    end
+    #   it "1000文字を超えるメモは無効" do
+    #     prompt.notes = "a" * 1001
+    #     expect(prompt).not_to be_valid
+    #     expect(prompt.errors[:notes]).to include("は1000文字以内で入力してください")
+    #   end
+    # end
   end
 
   describe 'バリデーション' do

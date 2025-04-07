@@ -7,20 +7,30 @@ class TagsController < ApplicationController
     tag_name = tag_params[:name].strip
     
     if tag_name.present?
-      # 既存のタグを検索または新規作成
-      @tag = Tag.find_or_initialize_by(name: tag_name)
-      
-      if @tag.new_record?
-        @tag.user = current_user
-        @tag.save
-      end
-      
-      # プロンプトにタグを関連付け
-      unless @prompt.tags.include?(@tag)
-        @prompt.tags << @tag
-        flash[:notice] = "タグ「#{tag_name}」を追加しました。"
-      else
-        flash[:alert] = "タグ「#{tag_name}」は既に追加されています。"
+      begin
+        # 既存のタグを検索または新規作成
+        @tag = Tag.find_or_initialize_by(name: tag_name[0...50]) # 50文字に制限
+        
+        if @tag.new_record?
+          @tag.user = current_user
+          @tag.save!
+        end
+        
+        # プロンプトにタグを関連付け
+        unless @prompt.tags.include?(@tag)
+          # taggingsテーブルに直接登録
+          tagging = Tagging.new(prompt: @prompt, tag: @tag)
+          if tagging.save
+            flash[:notice] = "タグ「#{@tag.name}」を追加しました。"
+          else
+            flash[:alert] = "タグの追加に失敗しました。"
+          end
+        else
+          flash[:alert] = "タグ「#{@tag.name}」は既に追加されています。"
+        end
+      rescue => e
+        Rails.logger.error "タグ作成エラー: #{e.message}"
+        flash[:alert] = "タグの追加に失敗しました：#{e.message}"
       end
     else
       flash[:alert] = "タグ名を入力してください。"
@@ -36,19 +46,27 @@ class TagsController < ApplicationController
   end
 
   def destroy
-    @tag = @prompt.tags.find(params[:id])
-    
-    if @prompt.tags.delete(@tag)
-      respond_to do |format|
-        format.html { redirect_to @prompt, notice: "タグ '#{@tag.name}' が削除されました。" }
-        format.turbo_stream { redirect_to @prompt, notice: "タグ '#{@tag.name}' が削除されました。" }
-        format.json { head :no_content }
+    begin
+      @tag = Tag.find(params[:id])
+      
+      # taggingsテーブルからの関連付けを削除
+      tagging = Tagging.find_by(prompt_id: @prompt.id, tag_id: @tag.id)
+      if tagging&.destroy
+        respond_to do |format|
+          format.html { redirect_to @prompt, notice: "タグ '#{@tag.name}' が削除されました。" }
+          format.json { head :no_content }
+        end
+      else
+        respond_to do |format|
+          format.html { redirect_to @prompt, alert: "タグの削除に失敗しました。" }
+          format.json { render json: { error: "タグの削除に失敗しました。" }, status: :unprocessable_entity }
+        end
       end
-    else
+    rescue => e
+      Rails.logger.error "タグ削除エラー: #{e.message}"
       respond_to do |format|
-        format.html { redirect_to @prompt, alert: "タグの削除に失敗しました。" }
-        format.turbo_stream { redirect_to @prompt, alert: "タグの削除に失敗しました。" }
-        format.json { render json: { error: "タグの削除に失敗しました。" }, status: :unprocessable_entity }
+        format.html { redirect_to @prompt, alert: "タグの削除に失敗しました: #{e.message}" }
+        format.json { render json: { error: e.message }, status: :unprocessable_entity }
       end
     end
   end

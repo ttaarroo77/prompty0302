@@ -1,0 +1,444 @@
+# AIモジュールを読み込む
+# require_relative '../app/models/ai/tag_suggestion'
+require_relative '../app/models/AI/tag_suggestion'
+
+
+# 既存のデータをリセット（オプション）
+if ENV['RESET_DATABASE'] == 'true'
+  puts "既存のデータをリセットしています..."
+  AI::TagSuggestion.destroy_all # ここ、参照の問題・・大丈夫？？
+  Prompt.destroy_all
+  Tag.destroy_all
+  User.destroy_all
+end
+
+# 管理者ユーザーの作成
+admin = User.where(email: "test@example.com").first_or_create do |user|
+  user.name = "test@example.com"
+  user.email = "test@example.com"
+  user.password = "test@example.com"
+  user.password_confirmation = "test@example.com"
+end
+puts "管理者ユーザーを作成しました: #{admin.email}"
+
+# 別のユーザーを作成
+user2 = User.where(email: "yamada@example.com").first_or_create do |user|
+  user.name = "山田太郎"
+  user.email = "yamada@example.com"
+  user.password = "password123"
+  user.password_confirmation = "password123"
+end
+puts "別のユーザーを作成しました: #{user2.email}"
+
+user3 = User.where(email: "tanaka@example.com").first_or_create do |user|
+  user.name = "田中花子"
+  user.email = "tanaka@example.com"
+  user.password = "password456"
+  user.password_confirmation = "password456"
+end
+puts "別のユーザーを作成しました: #{user3.email}"
+
+# サンプルタグの作成
+tags_data = [
+  { name: "プログラミング", user_id: admin.id },
+  { name: "ビジネス", user_id: admin.id },
+  { name: "マーケティング", user_id: admin.id },
+  { name: "AI", user_id: admin.id },
+  { name: "自己PR", user_id: admin.id },
+  { name: "レポート", user_id: admin.id },
+  { name: "デザイン", user_id: admin.id },
+  { name: "教育", user_id: admin.id },
+  { name: "研究", user_id: admin.id },
+  { name: "文章作成", user_id: admin.id }
+]
+
+# 山田太郎用のタグ
+yamada_tags_data = [
+  { name: "料理", user_id: user2.id },
+  { name: "旅行", user_id: user2.id },
+  { name: "健康", user_id: user2.id },
+  { name: "エンタメ", user_id: user2.id },
+  { name: "ブログ", user_id: user2.id },
+  { name: "小説", user_id: user2.id }
+]
+
+# 田中花子用のタグ
+tanaka_tags_data = [
+  { name: "イラスト", user_id: user3.id },
+  { name: "写真", user_id: user3.id },
+  { name: "音楽", user_id: user3.id },
+  { name: "SNS", user_id: user3.id },
+  { name: "生活", user_id: user3.id }
+]
+
+# タグをユーザーごとに管理するハッシュ
+created_tags = {
+  admin.id => {},
+  user2.id => {},
+  user3.id => {}
+}
+
+# 共有タグを作成（管理者のタグ）
+shared_tags = ["生活", "料理", "マーケティング", "デザイン"]
+shared_tags.each do |tag_name|
+  tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
+  puts "共有タグを作成しました: #{tag.name}"
+  created_tags[admin.id][tag_name] = tag
+end
+
+# 管理者のタグを作成
+tags_data.each do |tag_data|
+  next if shared_tags.include?(tag_data[:name])
+  tag = Tag.find_or_create_by!(name: tag_data[:name], user_id: tag_data[:user_id])
+  puts "タグを作成しました: #{tag.name}"
+  created_tags[admin.id][tag_data[:name]] = tag
+end
+
+# 山田太郎のタグを作成
+yamada_tags_data.each do |tag_data|
+  next if shared_tags.include?(tag_data[:name])
+  tag = Tag.find_or_create_by!(name: tag_data[:name], user_id: tag_data[:user_id])
+  puts "山田太郎のタグを作成しました: #{tag.name}"
+  created_tags[user2.id][tag_data[:name]] = tag
+end
+
+# 田中花子のタグを作成
+tanaka_tags_data.each do |tag_data|
+  next if shared_tags.include?(tag_data[:name])
+  tag = Tag.find_or_create_by!(name: tag_data[:name], user_id: tag_data[:user_id])
+  puts "田中花子のタグを作成しました: #{tag.name}"
+  created_tags[user3.id][tag_data[:name]] = tag
+end
+
+# サンプルプロンプトの作成
+prompts_data = [
+  {
+    title: "テスト用プロンプト1",
+    url: "https://test-prompt.example.com",
+    user_id: admin.id,
+    tags: ["AI", "テスト"]
+  },
+  {
+    title: "レポート作成プロンプト",
+    url: "https://report-writing.example.com/ai-ethics",
+    user_id: admin.id,
+    tags: ["AI", "レポート", "研究"]
+  },
+  {
+    title: "コード生成プロンプト",
+    url: "https://code-generator.example.com/rails",
+    user_id: admin.id,
+    tags: ["プログラミング", "AI"]
+  },
+  {
+    title: "自己PR文の作成",
+    url: "https://example.com/portfolio",
+    user_id: admin.id,
+    tags: ["自己PR", "ビジネス"]
+  },
+  {
+    title: "マーケティング戦略提案",
+    url: "https://marketing-strategy.example.com/subscription",
+    user_id: admin.id,
+    tags: ["マーケティング", "ビジネス"]
+  },
+  {
+    title: "ウェブデザインのアイデア",
+    url: "https://web-design.example.com/portfolio",
+    user_id: admin.id,
+    tags: ["デザイン", "ポートフォリオ"]
+  },
+  {
+    title: "数学の問題解説プロンプト",
+    url: "https://math-education.example.com/quadratic",
+    user_id: admin.id,
+    tags: ["教育", "数学"]
+  },
+  {
+    title: "研究論文の要約",
+    url: "https://research-summary.example.com/ai-education",
+    user_id: admin.id,
+    tags: ["研究", "AI", "教育"]
+  },
+  {
+    title: "英語学習用会話シナリオ",
+    url: "https://english-learning.example.com/cafe-conversation",
+    user_id: admin.id,
+    tags: ["教育", "英語", "会話"]
+  },
+  {
+    title: "プレゼンテーション資料作成",
+    url: "https://presentation.example.com/digital-transformation",
+    user_id: admin.id,
+    tags: ["ビジネス", "プレゼンテーション"]
+  }
+]
+
+# 山田太郎のプロンプト
+yamada_prompts_data = [
+  {
+    title: "週末の簡単レシピ",
+    url: "https://cooking.example.com/weekend-recipes",
+    user_id: user2.id,
+    tags: ["料理", "生活"]
+  }
+]
+
+# 田中花子のプロンプト
+tanaka_prompts_data = [
+  {
+    title: "写真撮影のコツ",
+    url: "https://photo-tips.example.com/food",
+    user_id: user3.id,
+    tags: ["写真", "料理"]
+  },
+  {
+    title: "SNS投稿文の例",
+    url: "https://instagram.com/handmade_accessories",
+    user_id: user3.id,
+    tags: ["SNS", "マーケティング"]
+  },
+  {
+    title: "音楽プレイリスト作成",
+    url: "https://music-playlist.example.com/focus",
+    user_id: user3.id,
+    tags: ["音楽", "作業効率"]
+  },
+  {
+    title: "季節のインテリアアイデア",
+    url: "https://interior-design.example.com/autumn",
+    user_id: user3.id,
+    tags: ["生活", "デザイン"]
+  }
+]
+
+# 管理者のプロンプトを作成
+prompts_data.each do |prompt_data|
+  # 既存のプロンプトを探すか、新しく作成
+  prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
+  
+  if prompt.nil?
+    prompt = Prompt.create!(
+      title: prompt_data[:title],
+      url: prompt_data[:url],
+      user_id: prompt_data[:user_id]
+    )
+    puts "プロンプトを作成しました: #{prompt.title}"
+  else
+    puts "プロンプトが既に存在します: #{prompt.title}"
+  end
+  
+  # タグの関連付け
+  prompt_data[:tags].each do |tag_name|
+    # タグが存在するか確認
+    tag = nil
+    if created_tags[admin.id][tag_name]
+      tag = created_tags[admin.id][tag_name]
+    else
+      # タグが存在しなければ作成
+      tag = Tag.find_or_initialize_by(name: tag_name, user_id: admin.id)
+      if tag.new_record?
+        tag.save!
+        puts "管理者用のタグを作成しました: #{tag.name}"
+        created_tags[admin.id][tag_name] = tag
+      end
+    end
+    
+    # タグとプロンプトを関連付け（既に関連付けられていなければ）
+    unless prompt.tags.include?(tag)
+      prompt.tags << tag
+      puts "タグ「#{tag.name}」をプロンプト「#{prompt.title}」に紐づけました"
+    end
+  end
+  
+  # AIタグ提案の作成
+  ai_tags = [
+    { name: "自己PR", confidence_score: 0.9 },
+    { name: "プロフィール", confidence_score: 0.8 },
+    { name: "ビジネス", confidence_score: 0.7 },
+    { name: "マーケティング", confidence_score: 0.6 },
+    { name: "ポートフォリオ", confidence_score: 0.5 },
+    { name: "実績", confidence_score: 0.4 },
+    { name: "デザイン", confidence_score: 0.3 }
+  ]
+  
+  # タグ提案をクリアして新しいものを作成
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
+  
+  ai_tags.sample(3).each do |tag_data|
+    AI::TagSuggestion.create!(
+      prompt_id: prompt.id,
+      name: tag_data[:name],
+      confidence_score: tag_data[:confidence_score],
+      applied: false
+    )
+    puts "AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
+  end
+end
+
+# 山田太郎のプロンプトを作成
+yamada_prompts_data.each do |prompt_data|
+  prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
+  
+  if prompt.nil?
+    prompt = Prompt.create!(
+      title: prompt_data[:title],
+      url: prompt_data[:url],
+      user_id: prompt_data[:user_id]
+    )
+    puts "山田太郎のプロンプトを作成しました: #{prompt.title}"
+  else
+    puts "山田太郎のプロンプトが既に存在します: #{prompt.title}"
+  end
+  
+  prompt_data[:tags].each do |tag_name|
+    # タグが存在するか確認
+    tag = nil
+    
+    # 共有タグかどうかを判断
+    if shared_tags.include?(tag_name)
+      # 共有タグ（管理者のタグ）を使用
+      tag = created_tags[admin.id][tag_name]
+    elsif ["旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
+      # 山田太郎のタグ
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: user2.id)
+      created_tags[user2.id][tag_name] = tag
+    else
+      # その他のタグは管理者のタグとして作成
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
+      created_tags[admin.id][tag_name] = tag
+    end
+    
+    unless prompt.tags.include?(tag)
+      prompt.tags << tag
+      puts "タグ「#{tag.name}」を山田太郎のプロンプト「#{prompt.title}」に紐づけました"
+    end
+  end
+  
+  # AIタグ提案
+  yamada_ai_tags = [
+    { name: "レシピ", confidence_score: 0.9 },
+    { name: "旅行プラン", confidence_score: 0.85 },
+    { name: "健康管理", confidence_score: 0.8 },
+    { name: "フィットネス", confidence_score: 0.75 },
+    { name: "ライフスタイル", confidence_score: 0.7 },
+    { name: "創作", confidence_score: 0.65 }
+  ]
+  
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
+  
+  yamada_ai_tags.sample(3).each do |tag_data|
+    AI::TagSuggestion.create!(
+      prompt_id: prompt.id,
+      name: tag_data[:name],
+      confidence_score: tag_data[:confidence_score],
+      applied: false
+    )
+    puts "山田太郎のプロンプト用AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
+  end
+end
+
+# 田中花子のプロンプトを作成
+tanaka_prompts_data.each do |prompt_data|
+  prompt = Prompt.find_by(title: prompt_data[:title], user_id: prompt_data[:user_id])
+  
+  if prompt.nil?
+    prompt = Prompt.create!(
+      title: prompt_data[:title],
+      url: prompt_data[:url],
+      user_id: prompt_data[:user_id]
+    )
+    puts "田中花子のプロンプトを作成しました: #{prompt.title}"
+  else
+    puts "田中花子のプロンプトが既に存在します: #{prompt.title}"
+  end
+  
+  prompt_data[:tags].each do |tag_name|
+    # タグが存在するか確認
+    tag = nil
+    
+    # 共有タグかどうかを判断
+    if shared_tags.include?(tag_name)
+      # 共有タグ（管理者のタグ）を使用
+      tag = created_tags[admin.id][tag_name]
+    elsif ["イラスト", "写真", "音楽", "SNS"].include?(tag_name)
+      # 田中花子のタグ
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: user3.id)
+      created_tags[user3.id][tag_name] = tag
+    elsif ["旅行", "健康", "エンタメ", "ブログ", "小説"].include?(tag_name)
+      # 山田太郎のタグ
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: user2.id)
+      created_tags[user2.id][tag_name] = tag
+    else
+      # その他のタグは管理者のタグとして作成
+      tag = Tag.find_or_create_by!(name: tag_name, user_id: admin.id)
+      created_tags[admin.id][tag_name] = tag
+    end
+    
+    unless prompt.tags.include?(tag)
+      prompt.tags << tag
+      puts "タグ「#{tag.name}」を田中花子のプロンプト「#{prompt.title}」に紐づけました"
+    end
+  end
+  
+  # AIタグ提案
+  tanaka_ai_tags = [
+    { name: "クリエイティブ", confidence_score: 0.95 },
+    { name: "アート", confidence_score: 0.9 },
+    { name: "写真撮影", confidence_score: 0.85 },
+    { name: "インスピレーション", confidence_score: 0.8 },
+    { name: "デジタル", confidence_score: 0.75 },
+    { name: "ソーシャルメディア", confidence_score: 0.7 },
+    { name: "インテリア", confidence_score: 0.65 }
+  ]
+  
+  AI::TagSuggestion.where(prompt_id: prompt.id).delete_all
+  
+  tanaka_ai_tags.sample(3).each do |tag_data|
+    AI::TagSuggestion.create!(
+      prompt_id: prompt.id,
+      name: tag_data[:name],
+      confidence_score: tag_data[:confidence_score],
+      applied: false
+    )
+    puts "田中花子のプロンプト用AIタグ提案を作成しました: #{tag_data[:name]} (#{prompt.title})"
+  end
+end
+
+# 既存のプロンプトにタグを追加
+puts "既存のプロンプトにタグを付けています..."
+
+# まず既存のタグを取得
+all_tags = Tag.all
+tag_names = all_tags.pluck(:name).uniq
+puts "利用可能なタグ: #{tag_names.join(', ')}"
+
+# 内容に基づいてタグを選択するヘルパーメソッド
+def select_relevant_tags(prompt, available_tags)
+  title_text = prompt.title.downcase
+  
+  available_tags.select do |tag|
+    keywords = tag.name.downcase.split
+    keywords.any? { |keyword| title_text.include?(keyword) }
+  end
+end
+
+# 既存のプロンプトを取得してタグを付ける
+Prompt.all.each do |prompt|
+  # プロンプトの内容に基づいて関連するタグを選択
+  available_tags = Tag.where(user_id: prompt.user_id).to_a
+  selected_tags = select_relevant_tags(prompt, available_tags)
+  
+  # タグを関連付け
+  selected_tags.each do |tag|
+    # 既存の関連付けを避ける
+    next if Tagging.exists?(prompt_id: prompt.id, tag_id: tag.id)
+    
+    Tagging.create!(prompt_id: prompt.id, tag_id: tag.id)
+    puts "プロンプト「#{prompt.title}」にタグ「#{tag.name}」を追加しました。"
+  end
+end
+
+puts "タグ付けが完了しました。"
+
+puts "シードの作成が完了しました！"

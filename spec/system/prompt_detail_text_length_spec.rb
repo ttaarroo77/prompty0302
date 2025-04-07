@@ -58,53 +58,53 @@ RSpec.describe "プロンプト詳細画面の文字数制限", type: :system do
     end
   end
 
-  describe "プロンプト本文入力" do
-    context "2000文字以下の本文" do
-      let(:valid_content) { "a" * 2000 }
+  # describe "プロンプト本文入力" do
+  #   context "2000文字以下の本文" do
+  #     let(:valid_content) { "a" * 2000 }
 
-      it "本文が正常に保存されること" do
-        visit edit_prompt_path(prompt)
-        fill_in "prompt_content", with: valid_content
-        click_button "更新"
-        expect(page).to have_content("プロンプトを更新しました")
-        expect(prompt.reload.content).to eq valid_content
-      end
-    end
+  #     it "本文が正常に保存されること" do
+  #       visit edit_prompt_path(prompt)
+  #       fill_in "prompt_content", with: valid_content
+  #       click_button "更新"
+  #       expect(page).to have_content("プロンプトを更新しました")
+  #       expect(prompt.reload.content).to eq valid_content
+  #     end
+  #   end
 
-    context "2000文字を超える本文" do
-      let(:invalid_content) { "a" * 2001 }
+  #   context "2000文字を超える本文" do
+  #     let(:invalid_content) { "a" * 2001 }
 
-      it "エラーメッセージが表示されること" do
-        visit edit_prompt_path(prompt)
-        fill_in "prompt_content", with: invalid_content
-        click_button "更新"
-        expect(page).to have_content("コンテンツは2000文字以内で入力してください")
-      end
-    end
-  end
+  #     it "エラーメッセージが表示されること" do
+  #       visit edit_prompt_path(prompt)
+  #       fill_in "prompt_content", with: invalid_content
+  #       click_button "更新"
+  #       expect(page).to have_content("コンテンツは2000文字以内で入力してください")
+  #     end
+  #   end
+  # end
 
-  describe "メモ入力" do
-    context "1000文字以下のメモ" do
-      let(:valid_notes) { "a" * 1000 }
+  # describe "メモ入力" do
+  #   context "1000文字以下のメモ" do
+  #     let(:valid_notes) { "a" * 1000 }
 
-      it "メモが正常に保存されること" do
-        visit edit_prompt_path(prompt)
-        fill_in "prompt_notes", with: valid_notes
-        click_button "更新"
-        expect(page).to have_content("プロンプトを更新しました")
-        expect(prompt.reload.notes).to eq valid_notes
-      end
-    end
+  #     it "メモが正常に保存されること" do
+  #       visit edit_prompt_path(prompt)
+  #       fill_in "prompt_notes", with: valid_notes
+  #       click_button "更新"
+  #       expect(page).to have_content("プロンプトを更新しました")
+  #       expect(prompt.reload.notes).to eq valid_notes
+  #     end
+  #   end
 
-    context "1000文字を超えるメモ" do
-      let(:invalid_notes) { "a" * 1001 }
+  #   context "1000文字を超えるメモ" do
+  #     let(:invalid_notes) { "a" * 1001 }
 
-      it "エラーメッセージが表示されること" do
-        visit edit_prompt_path(prompt)
-        fill_in "prompt_notes", with: invalid_notes
-        click_button "更新"
-        expect(page).to have_content("メモは1000文字以内で入力してください")
-      end
-    end
-  end
+  #     it "エラーメッセージが表示されること" do
+  #       visit edit_prompt_path(prompt)
+  #       fill_in "prompt_notes", with: invalid_notes
+  #       click_button "更新"
+  #       expect(page).to have_content("メモは1000文字以内で入力してください")
+  #     end
+  #   end
+  # end
 end

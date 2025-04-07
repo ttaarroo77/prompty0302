@@ -1,8 +1,8 @@
 <%= form_with(model: prompt, local: true) do |form| %>
   <% if prompt.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(prompt.errors.count, "error") %> prohibited this prompt from being saved:</h2>
-      <ul>
+    <div id="error_explanation" class="alert alert-danger mb-4">
+      <h5 class="alert-heading mb-4">入力内容にエラーがあります</h5>
+      <ul class="mb-0">
         <% prompt.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
@@ -10,52 +10,49 @@
     </div>
   <% end %>
 
-  <div class="field">
-    <%= form.label :title %>
-    <%= form.text_field :title, class: "form-control", maxlength: 100 %>
-    <div class="text-muted text-end">
-      <span class="title-counter">0</span>/100
+  <div class="mb-4">
+    <div class="mb-3">
+      <%= form.label :title, "タイトル", class: "form-label text-muted" %>
+      <%= form.text_field :title, class: "form-control form-control-lg", maxlength: 100 %>
+      <div class="text-muted text-end">
+        <span class="title-counter">0</span>/100
+      </div>
+      <div class="invalid-feedback title-error" style="display: none;">
+        タイトルは100文字以内で入力してください
+      </div>
     </div>
-    <div class="invalid-feedback title-error" style="display: none;">
-      タイトルは100文字以内で入力してください
+
+    <div class="mb-3">
+      <%= form.label :url, "URL", class: "form-label text-muted" %>
+      <%= form.url_field :url, class: "form-control", inputmode: "url", maxlength: 255 %>
+      <div class="text-muted text-end">
+        <span class="url-counter">0</span>/255
+      </div>
+      <div class="invalid-feedback url-error" style="display: none;">
+        URLは255文字以内で入力してください
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= form.label :description, "説明", class: "form-label text-muted" %>
+      <%= form.text_area :description, rows: 8, class: "form-control", maxlength: 500 %>
+      <div class="text-muted text-end">
+        <span class="description-counter">0</span>/500
+      </div>
+      <div class="invalid-feedback description-error" style="display: none;">
+        説明は500文字以内で入力してください
+      </div>
     </div>
   </div>
 
-  <div class="field">
-    <%= form.label :description %>
-    <%= form.text_area :description, class: "form-control", maxlength: 500 %>
-    <div class="text-muted text-end">
-      <span class="description-counter">0</span>/500
-    </div>
-    <div class="invalid-feedback description-error" style="display: none;">
-      説明は500文字以内で入力してください
-    </div>
-  </div>
-
-  <div class="field">
-    <%= form.label :content %>
-    <%= form.text_area :content, class: "form-control", maxlength: 2000 %>
-    <div class="text-muted text-end">
-      <span class="content-counter">0</span>/2000
-    </div>
-    <div class="invalid-feedback content-error" style="display: none;">
-      コンテンツは2000文字以内で入力してください
-    </div>
-  </div>
-
-  <div class="field">
-    <%= form.label :notes %>
-    <%= form.text_area :notes, class: "form-control", maxlength: 1000 %>
-    <div class="text-muted text-end">
-      <span class="notes-counter">0</span>/1000
-    </div>
-    <div class="invalid-feedback notes-error" style="display: none;">
-      メモは1000文字以内で入力してください
-    </div>
-  </div>
-
-  <div class="actions">
-    <%= form.submit class: "btn btn-primary" %>
+  <div class="d-flex justify-content-end gap-2">
+    <% if prompt.persisted? %>
+      <%= link_to "キャンセル", prompt_path(prompt), class: "btn btn-outline-secondary", style: "min-height: 38px; min-width: 88px;" %>
+      <%= form.submit "更新する", class: "btn btn-dark", style: "min-height: 38px; min-width: 88px;" %>
+    <% else %>
+      <%= link_to "キャンセル", prompts_path, class: "btn btn-outline-secondary", style: "min-height: 38px; min-width: 88px;" %>
+      <%= form.submit "作成する", class: "btn btn-dark", style: "min-height: 38px; min-width: 88px;" %>
+    <% end %>
   </div>
 <% end %>
 
@@ -83,28 +80,20 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCounter(titleInput, titleCounter, titleError);
   }
 
+  const urlInput = document.querySelector('#prompt_url');
+  const urlCounter = document.querySelector('.url-counter');
+  const urlError = document.querySelector('.url-error');
+  if (urlInput && urlCounter && urlError) {
+    urlInput.addEventListener('input', () => updateCounter(urlInput, urlCounter, urlError));
+    updateCounter(urlInput, urlCounter, urlError);
+  }
+
   const descriptionInput = document.querySelector('#prompt_description');
   const descriptionCounter = document.querySelector('.description-counter');
   const descriptionError = document.querySelector('.description-error');
   if (descriptionInput && descriptionCounter && descriptionError) {
     descriptionInput.addEventListener('input', () => updateCounter(descriptionInput, descriptionCounter, descriptionError));
     updateCounter(descriptionInput, descriptionCounter, descriptionError);
-  }
-
-  const contentInput = document.querySelector('#prompt_content');
-  const contentCounter = document.querySelector('.content-counter');
-  const contentError = document.querySelector('.content-error');
-  if (contentInput && contentCounter && contentError) {
-    contentInput.addEventListener('input', () => updateCounter(contentInput, contentCounter, contentError));
-    updateCounter(contentInput, contentCounter, contentError);
-  }
-
-  const notesInput = document.querySelector('#prompt_notes');
-  const notesCounter = document.querySelector('.notes-counter');
-  const notesError = document.querySelector('.notes-error');
-  if (notesInput && notesCounter && notesError) {
-    notesInput.addEventListener('input', () => updateCounter(notesInput, notesCounter, notesError));
-    updateCounter(notesInput, notesCounter, notesError);
   }
 });
 </script>
