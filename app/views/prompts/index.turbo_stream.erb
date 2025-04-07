@@ -12,7 +12,7 @@
                   <%= link_to prompt.url, prompt.url, target: "_blank", class: "text-muted text-decoration-none text-break" %>
                 </p>
               <% end %>
-              <p class="card-text text-truncate"><%= prompt.description %></p>
+              <p class="card-text text-truncate"><%= prompt.notes %></p>
               <div class="mb-2">
                 <% prompt.tags.each do |tag| %>
                   <%= link_to prompts_path(tag: tag.name), class: "badge bg-light text-dark text-decoration-none me-1" do %>

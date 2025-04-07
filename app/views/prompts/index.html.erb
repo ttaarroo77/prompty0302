@@ -17,7 +17,7 @@
             <div class="input-group">
               <%= f.search_field :search,
                   class: "form-control",
-                  placeholder: "タイトル、説明、タグで検索...",
+                  placeholder: "タイトル、メモ、タグで検索...",
                   value: params[:search],
                   data: {
                     action: "input->search#search",
@@ -99,7 +99,7 @@
                       <%= link_to prompt.url, prompt.url, target: "_blank", class: "text-muted text-decoration-none text-break" %>
                     </p>
                   <% end %>
-                  <p class="card-text text-truncate"><%= prompt.description %></p>
+                  <p class="card-text text-truncate"><%= prompt.notes %></p>
 
                   <div class="mb-2">
                     <% prompt.tags.each do |tag| %>
@@ -161,8 +161,8 @@
           </div>
           
           <div class="mb-3">
-            <%= f.label :description, "説明", class: "form-label" %>
-            <%= f.text_area :description, rows: 5, class: "form-control" %>
+            <%= f.label :notes, "メモ", class: "form-label" %>
+            <%= f.text_area :notes, rows: 5, class: "form-control" %>
           </div>
           
           <div class="mb-3">

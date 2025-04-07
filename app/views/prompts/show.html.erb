@@ -24,9 +24,9 @@
                       </div>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label text-muted mb-1">説明</label>
+                      <label class="form-label text-muted mb-1">メモ</label>
                       <div class="bg-white p-3 rounded">
-                        <%= simple_format @prompt.description %>
+                        <%= simple_format @prompt.notes %>
                       </div>
                     </div>
                   </div>
@@ -45,8 +45,8 @@
                     </div>
 
                     <div class="mb-3">
-                      <%= f.label :description, "説明", class: "form-label text-muted" %>
-                      <%= f.text_area :description, rows: 8, class: "form-control" %>
+                      <%= f.label :notes, "メモ", class: "form-label text-muted" %>
+                      <%= f.text_area :notes, rows: 8, class: "form-control" %>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-4">
@@ -231,14 +231,14 @@
           // 成功したら画面を更新（リロードなしで）
           const titleElement = promptContent.querySelector('h4');
           const urlElement = promptContent.querySelector('a.text-dark');
-          const descriptionElement = promptContent.querySelector('.bg-white.p-3');
+          const notesElement = promptContent.querySelector('.bg-white.p-3');
           
           if (titleElement) titleElement.textContent = formData.get('prompt[title]');
           if (urlElement) {
             urlElement.textContent = formData.get('prompt[url]');
             urlElement.href = formData.get('prompt[url]');
           }
-          if (descriptionElement) descriptionElement.innerHTML = formData.get('prompt[description]').replace(/\n/g, '<br>');
+          if (notesElement) notesElement.innerHTML = formData.get('prompt[notes]').replace(/\n/g, '<br>');
           
           // 編集フォームを非表示に
           promptContent.style.display = 'block';
