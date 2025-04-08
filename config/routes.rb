@@ -17,14 +17,16 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
   
   # プロンプトのリソース定義
-  # edit アクションを除外（詳細ページで編集機能を提供）
-  resources :prompts, except: [:edit] do
+  resources :prompts do
     resources :tags, only: [:create, :destroy] do
       collection do
         get :suggest
       end
     end
   end
+  
+  # タグのリソース定義
+  resources :tags, only: [:new, :create]
   
   # 古い編集URLへのアクセスを詳細ページにリダイレクト
   get '/prompts/:id/edit', to: redirect('/prompts/%{id}')

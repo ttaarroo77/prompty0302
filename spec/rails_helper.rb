@@ -26,7 +26,6 @@ RSpec.configure do |config|
 
   config.before(:each, type: :system) do
     Capybara.register_driver :selenium_chrome do |app|
-      Webdrivers::Chromedriver.required_version = '114.0.5735.90'
       options = Selenium::WebDriver::Chrome::Options.new
       options.add_argument('--headless')
       options.add_argument('--disable-gpu')

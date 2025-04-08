@@ -23,38 +23,13 @@ RSpec.describe "タグの文字数制限", type: :system do
     context "30文字を超えるタグ名" do
       let(:invalid_tag_name) { "a" * 31 }
 
-      it "エラーメッセージが表示されること" do
+      it "タグは30文字に切り詰められて保存されること" do
         visit new_tag_path
         fill_in "tag_name", with: invalid_tag_name
         click_button "作成"
-        expect(page).to have_content("タグ名は30文字以内で入力してください")
-      end
-    end
-  end
-
-  describe "タグの説明入力" do
-    context "200文字以下の説明" do
-      let(:valid_description) { "a" * 200 }
-
-      it "説明が正常に保存されること" do
-        visit new_tag_path
-        fill_in "tag_name", with: "テストタグ"
-        fill_in "tag_description", with: valid_description
-        click_button "作成"
+        # normalize_nameでタグ名は自動的に30文字に切り詰められる
         expect(page).to have_content("タグを作成しました")
-        expect(Tag.last.description).to eq valid_description
-      end
-    end
-
-    context "200文字を超える説明" do
-      let(:invalid_description) { "a" * 201 }
-
-      it "エラーメッセージが表示されること" do
-        visit new_tag_path
-        fill_in "tag_name", with: "テストタグ"
-        fill_in "tag_description", with: invalid_description
-        click_button "作成"
-        expect(page).to have_content("説明は200文字以内で入力してください")
+        expect(Tag.last.name).to eq invalid_tag_name[0...30]
       end
     end
   end

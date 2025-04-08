@@ -21,17 +21,6 @@
     </div>
   </div>
 
-  <div class="field">
-    <%= form.label :description %>
-    <%= form.text_area :description, class: "form-control", maxlength: 200 %>
-    <div class="text-muted text-end">
-      <span class="description-counter">0</span>/200
-    </div>
-    <div class="invalid-feedback description-error" style="display: none;">
-      説明は200文字以内で入力してください
-    </div>
-  </div>
-
   <div class="actions">
     <%= form.submit class: "btn btn-primary" %>
   </div>
@@ -59,14 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (nameInput && nameCounter && nameError) {
     nameInput.addEventListener('input', () => updateCounter(nameInput, nameCounter, nameError));
     updateCounter(nameInput, nameCounter, nameError);
-  }
-
-  const descriptionInput = document.querySelector('#tag_description');
-  const descriptionCounter = document.querySelector('.description-counter');
-  const descriptionError = document.querySelector('.description-error');
-  if (descriptionInput && descriptionCounter && descriptionError) {
-    descriptionInput.addEventListener('input', () => updateCounter(descriptionInput, descriptionCounter, descriptionError));
-    updateCounter(descriptionInput, descriptionCounter, descriptionError);
   }
 });
 </script> 

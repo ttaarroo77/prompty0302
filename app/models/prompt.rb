@@ -1,6 +1,5 @@
 class Prompt < ApplicationRecord
   belongs_to :user
-  has_many :prompt_tags, dependent: :destroy
   has_many :taggings, dependent: :destroy
   has_many :tags, through: :taggings
 

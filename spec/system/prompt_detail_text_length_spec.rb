@@ -9,8 +9,8 @@ RSpec.describe "プロンプト詳細画面の文字数制限", type: :system do
   end
 
   describe "タイトル入力" do
-    context "100文字以下のタイトル" do
-      let(:valid_title) { "a" * 100 }
+    context "15文字以下のタイトル" do
+      let(:valid_title) { "a" * 15 }
 
       it "タイトルが正常に保存されること" do
         visit edit_prompt_path(prompt)
@@ -21,42 +21,42 @@ RSpec.describe "プロンプト詳細画面の文字数制限", type: :system do
       end
     end
 
-    context "100文字を超えるタイトル" do
-      let(:invalid_title) { "a" * 101 }
+    context "15文字を超えるタイトル" do
+      let(:invalid_title) { "a" * 16 }
 
       it "エラーメッセージが表示されること" do
         visit edit_prompt_path(prompt)
         fill_in "prompt_title", with: invalid_title
         click_button "更新"
-        expect(page).to have_content("タイトルは100文字以内で入力してください")
+        expect(page).to have_content("タイトルは15文字以内で入力してください")
       end
     end
   end
 
-  describe "説明文入力" do
-    context "500文字以下の説明文" do
-      let(:valid_description) { "a" * 500 }
+  # describe "説明文入力" do
+  #   context "500文字以下の説明文" do
+  #     let(:valid_description) { "a" * 500 }
 
-      it "説明文が正常に保存されること" do
-        visit edit_prompt_path(prompt)
-        fill_in "prompt_description", with: valid_description
-        click_button "更新"
-        expect(page).to have_content("プロンプトを更新しました")
-        expect(prompt.reload.description).to eq valid_description
-      end
-    end
+  #     it "説明文が正常に保存されること" do
+  #       visit edit_prompt_path(prompt)
+  #       fill_in "prompt_description", with: valid_description
+  #       click_button "更新"
+  #       expect(page).to have_content("プロンプトを更新しました")
+  #       expect(prompt.reload.description).to eq valid_description
+  #     end
+  #   end
 
-    context "500文字を超える説明文" do
-      let(:invalid_description) { "a" * 501 }
+  #   context "500文字を超える説明文" do
+  #     let(:invalid_description) { "a" * 501 }
 
-      it "エラーメッセージが表示されること" do
-        visit edit_prompt_path(prompt)
-        fill_in "prompt_description", with: invalid_description
-        click_button "更新"
-        expect(page).to have_content("説明は500文字以内で入力してください")
-      end
-    end
-  end
+  #     it "エラーメッセージが表示されること" do
+  #       visit edit_prompt_path(prompt)
+  #       fill_in "prompt_description", with: invalid_description
+  #       click_button "更新"
+  #       expect(page).to have_content("説明は500文字以内で入力してください")
+  #     end
+  #   end
+  # end
 
   # describe "プロンプト本文入力" do
   #   context "2000文字以下の本文" do

@@ -92,7 +92,11 @@
             <div class="col-md-6 mb-4">
               <div class="card h-100">
                 <div class="card-body">
-                  <h5 class="card-title"><%= prompt.title %></h5>
+                  <h5 class="card-title">
+                    <span class="<%= 'truncate' if prompt.title.length > 50 %>" title="<%= prompt.title if prompt.title.length > 50 %>">
+                      <%= prompt.title %>
+                    </span>
+                  </h5>
                   <% if prompt.url.present? %>
                     <p class="card-text small text-truncate">
                       <i class="bi bi-link-45deg"></i>
@@ -102,10 +106,15 @@
                   <p class="card-text text-truncate"><%= prompt.notes %></p>
 
                   <div class="mb-2">
-                    <% prompt.tags.each do |tag| %>
+                    <% prompt.tags.first(3).each do |tag| %>
                       <%= link_to prompts_path(tag: tag.name, sort: params[:sort], search: params[:search]), class: "prompt-tag text-decoration-none me-2" do %>
-                        <%= tag.name %>
+                        <span class="<%= 'truncate' if tag.name.length > 20 %>" title="<%= tag.name if tag.name.length > 20 %>">
+                          <%= tag.name %>
+                        </span>
                       <% end %>
+                    <% end %>
+                    <% if prompt.tags.size > 3 %>
+                      <span class="text-muted">他<%= prompt.tags.size - 3 %>件</span>
                     <% end %>
                   </div>
 
@@ -166,8 +175,8 @@
           </div>
           
           <div class="mb-3">
-            <label for="tags" class="form-label">タグ</label>
-            <input type="text" name="tags" id="tags" class="form-control" placeholder="カンマ区切りで入力（例: Rails, 初心者, チュートリアル）">
+            <label for="tag_name" class="form-label">タグ</label>
+            <input type="text" name="tag_name" id="tag_name" class="form-control" placeholder="カンマ区切りで入力（例: Rails, 初心者, チュートリアル）">
             <div class="form-text">複数のタグはカンマ（,）で区切ってください</div>
           </div>
           

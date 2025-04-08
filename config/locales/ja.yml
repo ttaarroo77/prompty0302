@@ -14,7 +14,6 @@ ja:
         remember_me: ログイン状態を保存
       prompt:
         title: タイトル
-        description: 説明
         content: コンテンツ
         url: URL
         notes: メモ

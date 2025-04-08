@@ -115,7 +115,7 @@ def create_prompt_with_tags(prompt_data, user_tags, created_tags, admin_id)
   if prompt.nil?
     prompt = Prompt.create!(
       title: prompt_data[:title],
-      url: prompt_data[:url],
+      content: prompt_data[:content],
       notes: prompt_data[:notes],
       user_id: prompt_data[:user_id]
     )
@@ -149,7 +149,7 @@ end
 admin_prompts = [
   {
     title: "テスト用プロンプト1",
-    url: "https://test-prompt.example.com",
+    content: "これはテスト用のプロンプトです。",
     notes: "テスト用のプロンプトです。",
     user_id: admin.id,
     tags: ["プログラミング", "AI"]
@@ -160,7 +160,7 @@ admin_prompts = [
 yamada_prompts = [
   {
     title: "週末の簡単レシピ",
-    url: "https://cooking.example.com/weekend-recipes",
+    content: "週末に作れる簡単なレシピのプロンプトです。",
     notes: "週末に作れる簡単なレシピのプロンプトです。",
     user_id: user2.id,
     tags: ["料理", "生活"]
@@ -171,14 +171,14 @@ yamada_prompts = [
 tanaka_prompts = [
   {
     title: "写真撮影のコツ",
-    url: "https://photo-tips.example.com/food",
+    content: "料理写真の撮影テクニックについてのプロンプトです。",
     notes: "料理写真の撮影テクニックについてのプロンプトです。",
     user_id: user3.id,
     tags: ["写真", "料理"]
   },
   {
     title: "SNS投稿文の例",
-    url: "https://instagram.com/handmade_accessories",
+    content: "SNSの投稿文を作成するためのプロンプトです。",
     notes: "SNSの投稿文を作成するためのプロンプトです。",
     user_id: user3.id,
     tags: ["SNS", "マーケティング"]
