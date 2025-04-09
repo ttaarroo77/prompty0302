@@ -16,6 +16,7 @@ admin = User.where(email: "test@example.com").first_or_create do |user|
   user.email = "test@example.com"
   user.password = "test@example.com"
   user.password_confirmation = "test@example.com"
+  user.admin = true
 end
 puts "管理者ユーザーを作成しました: #{admin.email}"
 
@@ -153,6 +154,34 @@ admin_prompts = [
     notes: "テスト用のプロンプトです。",
     user_id: admin.id,
     tags: ["プログラミング", "AI"]
+  },
+  {
+    title: "レポート作成",
+    content: "以下のフォーマットで[テーマ]に関するレポートを作成してください。\n\n## 概要\n\n## 背景\n\n## 現状分析\n\n## 課題\n\n## 解決策\n\n## まとめ",
+    notes: "ビジネスレポート作成用のプロンプト",
+    user_id: admin.id,
+    tags: ["ビジネス", "レポート"]
+  },
+  {
+    title: "自己PR文",
+    content: "以下の項目に沿って、私の経歴と強みを活かした自己PR文を300文字程度で作成してください。\n\n【職歴】\n[職歴]\n\n【スキル】\n[スキル]\n\n【強み】\n[強み]\n\n【志望動機】\n[志望動機]",
+    notes: "就職・転職活動用の自己PR文作成プロンプト",
+    user_id: admin.id,
+    tags: ["自己PR", "文章作成"]
+  },
+  {
+    title: "コード解説",
+    content: "以下のコードについて、初心者にもわかりやすく解説してください。各行の処理内容と全体の目的、使われている技術や概念について説明してください。\n\n```\n[コードをここに貼り付け]\n```",
+    notes: "プログラミング学習用",
+    user_id: admin.id,
+    tags: ["プログラミング", "教育"]
+  },
+  {
+    title: "マーケ戦略立案",
+    content: "以下の情報をもとに、効果的なマーケティング戦略を立案してください。\n\n【製品/サービス】\n[製品/サービスの説明]\n\n【ターゲット】\n[ターゲット層]\n\n【競合状況】\n[競合状況]\n\n【予算】\n[予算]\n\n【目標】\n[目標]",
+    notes: "マーケティング戦略立案用",
+    user_id: admin.id,
+    tags: ["マーケティング", "ビジネス"]
   }
 ]
 

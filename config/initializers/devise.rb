@@ -14,7 +14,7 @@ Devise.setup do |config|
   # confirmation, reset password and unlock tokens in the database.
   # Devise will use the `secret_key_base` as its `secret_key`
   # by default. You can change it below and use your own secret key.
-  # config.secret_key = '08bb8ec6a3979e5b3781d90085d35065cc2615b554b39a4e654ff732ffa0ee644e38fa0bf14b2eb419553e0d32c3b86e0ba16e8f9f3f51b2857175db673453d8'
+  # config.secret_key = '70c6dd31158b64cb7e99e16ce1c3d3d04f26eb55e3857f93a21a4ac19b6c2d58bdd04f5a63a6a0d8d5ca9ed0aabd90efd60c7ebbafa3b36a7c77b9d74fc5defc'
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
@@ -24,7 +24,7 @@ Devise.setup do |config|
   # Configure the e-mail address which will be shown in Devise::Mailer,
   # note that it will be overwritten if you use your own mailer class
   # with default "from" parameter.
-  config.mailer_sender = ENV.fetch("MAILER_SENDER", "noreply@prompty03.herokuapp.com")
+  config.mailer_sender = 'noreply@prompty0302.herokuapp.com'
 
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'

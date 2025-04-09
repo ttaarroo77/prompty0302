@@ -11,22 +11,25 @@ class TagsController < ApplicationController
         # 既存のタグを検索または新規作成
         @tag = Tag.find_or_initialize_by(name: tag_name[0...50]) # 50文字に制限
         
+        # タグが既にプロンプトに関連付けられているかを確認
+        if @prompt.tags.exists?(name: @tag.name)
+          flash[:alert] = "タグ「#{@tag.name}」は既に追加されています。"
+          redirect_to prompt_path(@prompt, suggested_tag_ids: params[:suggested_tag_ids])
+          return
+        end
+        
         if @tag.new_record?
           @tag.user = current_user
           @tag.save!
         end
         
         # プロンプトにタグを関連付け
-        unless @prompt.tags.include?(@tag)
-          # taggingsテーブルに直接登録
-          tagging = Tagging.new(prompt: @prompt, tag: @tag)
-          if tagging.save
-            flash[:notice] = "タグ「#{@tag.name}」を追加しました。"
-          else
-            flash[:alert] = "タグの追加に失敗しました。"
-          end
+        # taggingsテーブルに直接登録
+        tagging = Tagging.new(prompt: @prompt, tag: @tag)
+        if tagging.save
+          flash[:notice] = "タグ「#{@tag.name}」を追加しました。"
         else
-          flash[:alert] = "タグ「#{@tag.name}」は既に追加されています。"
+          flash[:alert] = "タグの追加に失敗しました。"
         end
       rescue => e
         Rails.logger.error "タグ作成エラー: #{e.message}"

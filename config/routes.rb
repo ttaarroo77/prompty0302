@@ -28,6 +28,9 @@ Rails.application.routes.draw do
   # タグのリソース定義
   resources :tags, only: [:new, :create]
   
+  # タグ削除のGETリクエストを処理する (JavaScript無効時のフォールバック)
+  get '/prompts/:prompt_id/tags/:id', to: 'tags#destroy', as: :delete_prompt_tag
+  
   # 古い編集URLへのアクセスを詳細ページにリダイレクト
   get '/prompts/:id/edit', to: redirect('/prompts/%{id}')
 end
