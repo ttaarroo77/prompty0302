@@ -24,12 +24,16 @@ class TagsController < ApplicationController
         end
         
         # プロンプトにタグを関連付け
-        # taggingsテーブルに直接登録
-        tagging = Tagging.new(prompt: @prompt, tag: @tag)
-        if tagging.save
-          flash[:notice] = "タグ「#{@tag.name}」を追加しました。"
+        # taggingsテーブルに関連付けがないことを再確認
+        if Tagging.exists?(prompt_id: @prompt.id, tag_id: @tag.id)
+          flash[:alert] = "タグ「#{@tag.name}」は既に追加されています。"
         else
-          flash[:alert] = "タグの追加に失敗しました。"
+          tagging = Tagging.new(prompt: @prompt, tag: @tag)
+          if tagging.save
+            flash[:notice] = "タグ「#{@tag.name}」を追加しました。"
+          else
+            flash[:alert] = "タグの追加に失敗しました。"
+          end
         end
       rescue => e
         Rails.logger.error "タグ作成エラー: #{e.message}"

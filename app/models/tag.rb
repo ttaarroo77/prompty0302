@@ -5,7 +5,8 @@ class Tag < ApplicationRecord
   
   validates :name, presence: true,
                   length: { maximum: 30 },
-                  format: { without: /[;'"\\]|or\s+1=1/i, message: 'に無効な文字が含まれています' }
+                  format: { without: /[;'"\\]|or\s+1=1/i, message: 'に無効な文字が含まれています' },
+                  uniqueness: { case_sensitive: false, message: 'は既に存在します' }
   
   # タグ名を保存前に整形する
   before_validation :normalize_name

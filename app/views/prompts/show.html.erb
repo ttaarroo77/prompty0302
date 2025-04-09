@@ -77,8 +77,8 @@
                           <span class="badge rounded-pill px-3 py-2" style="font-size: 14px; background-color: #f5f5f5; color: #212529;">
                             <%= tag.name %>
                           </span>
-                          <%= link_to delete_prompt_tag_path(@prompt, tag), 
-                              data: { turbo_confirm: "タグ「#{tag.name}」を削除してもよろしいですか？" },
+                          <%= link_to prompt_tag_path(@prompt, tag), 
+                              data: { turbo_method: :delete, turbo_confirm: "タグ「#{tag.name}」を削除してもよろしいですか？" },
                               class: "text-danger ms-1" do %>
                             <i class="bi bi-x-circle"></i>
                           <% end %>
