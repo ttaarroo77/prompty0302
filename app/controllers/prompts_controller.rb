@@ -168,24 +168,37 @@ class PromptsController < ApplicationController
 
   def create
     @prompt = current_user.prompts.build(prompt_params)
+    
+    # 一時変数にタグを保存
+    @tag_list = params[:tags].present? ? params[:tags].split(',').map(&:strip) : []
 
     respond_to do |format|
       if @prompt.save
         # タグの処理
-        if params[:tags].present?
-          tags = params[:tags].split(',').map(&:strip)
-          tags.each do |tag_name|
+        tag_errors = []
+        if @tag_list.present?
+          @tag_list.each do |tag_name|
             next if tag_name.blank?
+            
+            # タグ名が長すぎる場合は切り詰める（30文字まで）
+            tag_name = tag_name[0...30] if tag_name.length > 30
+            
             tag = Tag.find_or_initialize_by(name: tag_name)
             if tag.new_record?
               tag.user = current_user
-              tag.save
+              unless tag.save
+                tag_errors << "タグ「#{tag_name}」: #{tag.errors.full_messages.join(', ')}"
+                next
+              end
             end
             Tagging.create(prompt: @prompt, tag: tag)
           end
         end
         
-        format.html { redirect_to @prompt, notice: 'プロンプトを作成しました' }
+        notice_message = 'プロンプトを作成しました'
+        notice_message += "（警告: #{tag_errors.join('; ')}）" if tag_errors.any?
+        
+        format.html { redirect_to @prompt, notice: notice_message }
         format.json { render :show, status: :created, location: @prompt }
       else
         format.html { render :new, status: :unprocessable_entity }
@@ -195,27 +208,41 @@ class PromptsController < ApplicationController
   end
 
   def update
+    # 一時変数にタグを保存
+    @tag_list = params[:tags].present? ? params[:tags].split(',').map(&:strip) : []
+    
     respond_to do |format|
       if @prompt.update(prompt_params)
         # タグの処理
-        if params[:tags].present?
-          # 既存のタグを削除
-          @prompt.taggings.destroy_all
-          
-          # 新しいタグを追加
-          tags = params[:tags].split(',').map(&:strip)
-          tags.each do |tag_name|
+        tag_errors = []
+        
+        # 既存のタグを削除
+        @prompt.taggings.destroy_all
+        
+        # 新しいタグを追加
+        if @tag_list.present?
+          @tag_list.each do |tag_name|
             next if tag_name.blank?
+            
+            # タグ名が長すぎる場合は切り詰める（30文字まで）
+            tag_name = tag_name[0...30] if tag_name.length > 30
+            
             tag = Tag.find_or_initialize_by(name: tag_name)
             if tag.new_record?
               tag.user = current_user
-              tag.save
+              unless tag.save
+                tag_errors << "タグ「#{tag_name}」: #{tag.errors.full_messages.join(', ')}"
+                next
+              end
             end
             Tagging.create(prompt: @prompt, tag: tag)
           end
         end
         
-        format.html { redirect_to @prompt, notice: 'プロンプトを更新しました' }
+        notice_message = 'プロンプトを更新しました'
+        notice_message += "（警告: #{tag_errors.join('; ')}）" if tag_errors.any?
+        
+        format.html { redirect_to @prompt, notice: notice_message }
         format.json { 
           render json: { 
             success: true, 
@@ -226,7 +253,7 @@ class PromptsController < ApplicationController
               url: @prompt.url,
               tags: @prompt.tags.map { |tag| { id: tag.id, name: tag.name } }
             }, 
-            message: 'プロンプトを更新しました' 
+            message: notice_message 
           }, status: :ok 
         }
       else
