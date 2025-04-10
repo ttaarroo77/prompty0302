@@ -5,9 +5,10 @@ Rails.application.config.to_prepare do
     module AI; end
   end
 
-  # TagSuggestionクラスが定義されていない場合、空のクラスを定義
+  # TagSuggestionクラスが定義されていない場合、必要な設定で定義
   unless AI.const_defined?('TagSuggestion')
     AI::TagSuggestion = Class.new(ApplicationRecord) do
+      self.table_name = 'ai_tag_suggestions'
       belongs_to :prompt
       validates :name, presence: true
     end
