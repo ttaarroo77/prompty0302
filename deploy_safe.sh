@@ -8,6 +8,12 @@
 
 
 
+# アプリ パスワード
+# heroku_prompty
+# qxwd zaua yrds bzxd
+
+
+
 # ./deploy_safe.sh
 #!/bin/bash
 

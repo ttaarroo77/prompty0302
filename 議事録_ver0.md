@@ -201,3 +201,7 @@ rspec ./spec/system/tag_text_length_spec.rb:14 # タグの文字数制限 タグ
 rspec ./spec/system/tag_text_length_spec.rb:26 # タグの文字数制限 タグ名入力 30文字を超えるタグ名 タグは30文字に切り詰められて保存されること
 
 nakazawatarou@nakazawatarounoMacBook-Air prompty0302 % 
+
+
+
+
