@@ -58,7 +58,7 @@ gem "aws-sdk-s3", require: false
 gem "mini_magick"
 
 # キャッシュ用
-gem "hiredis-client", "~> 0.14.0"
+gem "hiredis-client", "~> 0.24.0"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
