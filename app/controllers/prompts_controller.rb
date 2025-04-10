@@ -237,7 +237,17 @@ class PromptsController < ApplicationController
   end
 
   def destroy
+    # 関連するAI::TagSuggestionレコードを直接削除
+    begin
+      ActiveRecord::Base.connection.execute("DELETE FROM ai_tag_suggestions WHERE prompt_id = #{@prompt.id}")
+    rescue => e
+      # エラーがあっても続行
+      Rails.logger.error "Failed to delete ai_tag_suggestions: #{e.message}"
+    end
+    
+    # プロンプトを削除
     @prompt.destroy
+    
     respond_to do |format|
       format.html { redirect_to prompts_url, notice: 'プロンプトを削除しました' }
       format.json { head :no_content }
