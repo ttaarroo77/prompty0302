@@ -23,11 +23,11 @@
           </div>
 
           <div class="d-grid">
-            <%= f.submit "パスワードを変更する", class: "btn btn-primary btn-lg" %>
+            <%= f.submit "パスワードを変更する", class: "btn btn-dark btn-lg" %>
           </div>
         <% end %>
 
-        <div class="mt-4 text-center">
+        <div class="mt-4 text-center auth-links">
           <%= render "devise/shared/links" %>
         </div>
       </div>
@@ -49,6 +49,15 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
+  .btn-dark {
+    transition: all 0.2s ease;
+  }
+  
+  .btn-dark:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
   .form-control:focus {
     border-color: #86b7fe;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
@@ -61,5 +70,16 @@
   .card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .auth-links a {
+    color: #212529 !important;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .auth-links a:hover {
+    text-decoration: underline;
   }
 </style>
