@@ -24,6 +24,10 @@ class TagSuggestionService
       # 現在のユーザーが既に使用しているタグを取得
       user_tags = get_user_tags(current_user) if current_user
       
+      # タグリストをログに出力（デバッグ用）
+      Rails.logger.info "既存タグ一覧: #{existing_tags.inspect}"
+      Rails.logger.info "ユーザータグ一覧: #{(user_tags || []).inspect}"
+      
       # OpenAI APIを使用してタグを生成（既存タグの中から選択）
       tag_names = @openai_client.generate_tag_suggestions(prompt, existing_tags, user_tags || [])
       
@@ -42,12 +46,11 @@ class TagSuggestionService
   private
 
   def get_existing_tags
-    # スタンドアロンタグとプロンプトに紐づくタグを取得
-    standalone_tags = Tag.where(prompt_id: nil).pluck(:name)
-    prompt_tags = Tag.where.not(prompt_id: nil).pluck(:name)
+    # すべてのタグの名前を取得（prompt_idカラムは参照しない）
+    all_tags = Tag.pluck(:name)
     
     # 重複を除去してソート
-    (standalone_tags + prompt_tags).uniq.sort
+    all_tags.uniq.sort
   end
 
   def get_user_tags(user)
@@ -57,7 +60,14 @@ class TagSuggestionService
     user_prompt_ids = Prompt.where(user_id: user.id).pluck(:id)
     
     # ユーザーのプロンプトに関連付けられたタグを取得
-    Tag.where(prompt_id: user_prompt_ids).pluck(:name).uniq
+    user_tags = []
+    
+    # taggingsテーブル経由でタグを取得
+    tag_ids = Tagging.where(prompt_id: user_prompt_ids).pluck(:tag_id).uniq
+    user_tags = Tag.where(id: tag_ids).pluck(:name).uniq
+    
+    Rails.logger.info "ユーザータグ (#{user.email}): #{user_tags.inspect}"
+    user_tags
   end
 
   def find_matching_tags(tag_names)
@@ -67,9 +77,19 @@ class TagSuggestionService
       normalized_name = name.gsub(/[^\p{L}\p{N}\s_-]/u, '').strip
       next if normalized_name.blank?
       
-      # 既存のタグを検索（スタンドアロンタグを優先）
-      tag = Tag.where(prompt_id: nil).find_by(name: normalized_name)
-      tag ||= Tag.where.not(prompt_id: nil).find_by(name: normalized_name)
+      # 名前が21文字を超える場合は切り詰める（マイグレーションで制限されているため）
+      normalized_name = normalized_name[0...21] if normalized_name.length > 21
+      
+      # 既存のタグを検索
+      tag = Tag.find_by(name: normalized_name)
+      
+      # タグが見つからない場合は作成（これにより確実にタグが提案される）
+      if tag.nil?
+        Rails.logger.info "タグが見つからなかったため新規作成: #{normalized_name}"
+        # 現在のユーザーIDがセッションから取得できない場合は最初の管理者を使用
+        admin_user = User.find_by(admin: true) || User.first
+        tag = Tag.create(name: normalized_name, user_id: admin_user.id)
+      end
       
       tags << tag if tag && !tags.include?(tag)
     end
@@ -90,8 +110,20 @@ class TagSuggestionService
     prioritized_tags.concat(user_tags) if user_tags.present?
     prioritized_tags.concat(BASIC_TAGS & existing_tags) # 基本タグと既存タグの共通部分
     
+    # 基本タグがなければ、基本タグを作成
+    if prioritized_tags.empty? && BASIC_TAGS.any?
+      admin_user = User.find_by(admin: true) || User.first
+      BASIC_TAGS.each do |tag_name|
+        next if tag_name.length > 21 # 名前の長さ制限
+        tag = Tag.find_or_create_by(name: tag_name, user_id: admin_user.id)
+        prioritized_tags << tag_name if tag.persisted?
+      end
+    end
+    
     # 重複を除去
     prioritized_tags = prioritized_tags.uniq
+    
+    Rails.logger.info "フォールバックタグ: #{prioritized_tags.inspect}"
     
     # ユーザータグと基本タグから提案
     find_matching_tags(prioritized_tags)

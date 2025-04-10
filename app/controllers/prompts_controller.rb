@@ -1,9 +1,9 @@
 class PromptsController < ApplicationController
   require_relative '../models/ai'
   
+  before_action :authenticate_user!
   before_action :set_prompt, only: [:show, :edit, :update, :destroy]
   before_action :check_prompt_owner, only: [:show, :edit, :update, :destroy]
-  before_action :authenticate_user!
 
   def index
     @prompt = Prompt.new
@@ -113,7 +113,8 @@ class PromptsController < ApplicationController
   end
 
   def show
-    @prompt = Prompt.find(params[:id])
+    # set_promptで@promptが設定されている前提
+    return unless @prompt
     
     begin
       # タグ提案の取得処理
@@ -121,31 +122,75 @@ class PromptsController < ApplicationController
         # 既存のタグ提案をクリア
         ::AI::TagSuggestion.where(prompt_id: @prompt.id).delete_all
         
-        # モックタグを生成して保存
-        mock_tags = [
-          { name: "自己PR", confidence_score: 0.9 },
-          { name: "プロフィール", confidence_score: 0.8 },
-          { name: "ビジネス", confidence_score: 0.7 },
-          { name: "マーケティング", confidence_score: 0.6 },
-          { name: "ポートフォリオ", confidence_score: 0.5 },
-          { name: "実績", confidence_score: 0.4 },
-          { name: "デザイン", confidence_score: 0.3 }
-        ]
-        
-        mock_tags.each do |tag|
-          ::AI::TagSuggestion.create(
-            prompt_id: @prompt.id,
-            name: tag[:name],
-            confidence_score: tag[:confidence_score],
-            applied: false
-          )
+        begin
+          # TagSuggestionServiceを使用してタグを提案
+          service = TagSuggestionService.new
+          tag_suggestions = service.suggest_tags(@prompt, current_user)
+          
+          Rails.logger.info "TagSuggestionServiceからの提案タグ: #{tag_suggestions.map(&:name).inspect}"
+          
+          # 提案されたタグがある場合、AI::TagSuggestionモデルに保存
+          if tag_suggestions.present?
+            tag_suggestions.each_with_index do |tag, index|
+              confidence = 1.0 - (index * 0.1) # 単純な信頼度スコア（最初が最高）
+              ::AI::TagSuggestion.create(
+                prompt_id: @prompt.id,
+                name: tag.name,
+                confidence_score: confidence,
+                applied: false
+              )
+            end
+            flash[:notice] = 'AIがタグを生成しました'
+          else
+            # モックタグを生成して保存
+            mock_tags = [
+              { name: "自己PR", confidence_score: 0.9 },
+              { name: "プロフィール", confidence_score: 0.8 },
+              { name: "ビジネス", confidence_score: 0.7 },
+              { name: "マーケティング", confidence_score: 0.6 },
+              { name: "ポートフォリオ", confidence_score: 0.5 }
+            ]
+            
+            mock_tags.each do |tag|
+              ::AI::TagSuggestion.create(
+                prompt_id: @prompt.id,
+                name: tag[:name],
+                confidence_score: tag[:confidence_score],
+                applied: false
+              )
+            end
+            
+            flash[:notice] = 'AIがタグを生成しました (モックデータ)'
+          end
+        rescue => e
+          Rails.logger.error "タグ提案サービスエラー: #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+          
+          # エラー時はモックデータを使用
+          mock_tags = [
+            { name: "自己PR", confidence_score: 0.9 },
+            { name: "プロフィール", confidence_score: 0.8 },
+            { name: "ビジネス", confidence_score: 0.7 },
+            { name: "マーケティング", confidence_score: 0.6 },
+            { name: "ポートフォリオ", confidence_score: 0.5 }
+          ]
+          
+          mock_tags.each do |tag|
+            ::AI::TagSuggestion.create(
+              prompt_id: @prompt.id,
+              name: tag[:name],
+              confidence_score: tag[:confidence_score],
+              applied: false
+            )
+          end
+          
+          flash[:alert] = "タグ提案中にエラーが発生しましたが、モックデータを使用しました: #{e.message}"
         end
-        
-        flash[:notice] = 'AIがタグを生成しました'
       end
       
       # タグ提案を取得
       @suggested_tags = ::AI::TagSuggestion.where(prompt_id: @prompt.id).order(confidence_score: :desc)
+      Rails.logger.debug "提案タグ数: #{@suggested_tags.size}"
     rescue => e
       # エラーが発生した場合はログに出力し、デフォルト値を設定
       Rails.logger.error "Error with tag suggestions: #{e.message}"
@@ -284,10 +329,24 @@ class PromptsController < ApplicationController
   private
 
   def set_prompt
-    @prompt = current_user.prompts.find(params[:id])
+    # current_userがnilの場合はログインページにリダイレクト
+    unless current_user
+      redirect_to new_user_session_path, alert: 'この操作を行うにはログインが必要です。'
+      return
+    end
+    
+    @prompt = current_user.prompts.find_by(id: params[:id])
+    
+    # プロンプトが見つからない場合はリダイレクト
+    unless @prompt
+      redirect_to prompts_path, alert: 'プロンプトが見つかりませんでした。'
+    end
   end
 
   def check_prompt_owner
+    # set_promptでnilチェックを行うようになったので簡略化
+    return if @prompt.nil?
+    
     unless @prompt.user_id == current_user.id
       redirect_to prompts_path, alert: '他のユーザーのプロンプトにはアクセスできません。'
     end

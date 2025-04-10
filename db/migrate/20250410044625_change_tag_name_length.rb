@@ -1,7 +1,7 @@
 class ChangeTagNameLength < ActiveRecord::Migration[7.1]
   def up
-    # タグ名の列長を30に変更
-    change_column :tags, :name, :string, limit: 30
+    # タグ名の列長を21に変更
+    change_column :tags, :name, :string, limit: 21
   end
 
   def down
